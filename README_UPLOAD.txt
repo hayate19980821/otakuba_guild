@@ -1,9 +1,19 @@
-# otakuba-guild-stable-battle-v3-final
+# otakuba-admin-rebuild-v1
 
-index.html と admin.html をGitHubに上書きしてください。
+管理画面だけを整理した版です。
 
-確認URL:
-https://hayate19980821.github.io/otakuba_guild/?v=stable3final
+## 内容
+- ダッシュボード
+- メニュー管理（ジャンル別）
+- 売上管理
+- 顧客管理
+- 討伐システム
+- 通知設定
+- デザイン設定
+- データ管理
 
-管理URL:
-https://hayate19980821.github.io/otakuba_guild/admin.html?v=stable3final
+## GitHub
+admin.html だけ上書きしてください。
+
+## URL
+https://hayate19980821.github.io/otakuba_guild/admin.html?v=admin1
