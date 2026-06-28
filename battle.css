@@ -1,14 +1,18 @@
-/* === おたく場ギルド 討伐システムβ：理想レイアウト === */
-#screenMenu{padding-top:10px!important}
-#screenMenu .hud{margin-bottom:4px!important}
-#screenMenu .guild-card{padding:14px 18px!important}
-#screenMenu .guild-name{font-size:14px!important}
-#screenMenu .adventurer{font-size:18px!important;line-height:1.45!important}
-#screenMenu .level-badge{font-size:20px!important;padding:7px 16px!important}
+/* === おたく場ギルド 討伐システムβ：メニュー表優先レイアウト v6 === */
 
+/* 冒険者カードを小さくして、メニューを主役にする */
+#screenMenu{padding-top:8px!important}
+#screenMenu .hud{margin-bottom:4px!important}
+#screenMenu .guild-card{padding:10px 14px!important}
+#screenMenu .guild-name{font-size:12px!important}
+#screenMenu .adventurer{font-size:14px!important;line-height:1.35!important}
+#screenMenu .welcome-line{font-size:13px!important;line-height:1.35!important}
+#screenMenu .level-badge{font-size:16px!important;padding:5px 12px!important}
+
+/* 敵は飾りとして小さめ */
 .battle-panel{
-  height:138px;
-  margin:0 0 8px;
+  height:78px;
+  margin:-2px 0 4px;
   position:relative;
   overflow:visible;
   pointer-events:none;
@@ -16,7 +20,7 @@
 .battle-title,.battle-hp-wrap,.battle-log{display:none}
 .battle-field{
   position:relative;
-  height:138px;
+  height:78px;
   border:0;
   background:transparent!important;
   overflow:visible;
@@ -24,61 +28,71 @@
 .battle-enemy{
   position:absolute;
   left:50%;
-  bottom:2px;
+  bottom:-4px;
   transform:translateX(-50%);
-  max-width:46%;
-  max-height:132px;
+  max-width:25%;
+  max-height:82px;
   z-index:2;
   image-rendering:auto;
-  filter:drop-shadow(0 10px 8px rgba(0,0,0,.62));
+  filter:drop-shadow(0 7px 5px rgba(0,0,0,.55));
 }
 .battle-fallback{
   position:absolute;
   left:50%;
-  bottom:24px;
+  bottom:8px;
   transform:translateX(-50%);
   z-index:2;
-  font-size:64px;
-  filter:drop-shadow(0 8px 8px rgba(0,0,0,.65));
+  font-size:38px;
+  filter:drop-shadow(0 6px 5px rgba(0,0,0,.6));
 }
 .battle-damage{
   position:absolute;
   left:50%;
-  top:10px;
+  top:-4px;
   transform:translateX(-50%);
   z-index:5;
-  font-size:24px;
+  font-size:18px;
   font-weight:900;
   color:#fff2a5;
-  text-shadow:2px 2px 0 #000,0 0 12px rgba(255,70,70,.95);
+  text-shadow:2px 2px 0 #000,0 0 10px rgba(255,70,70,.95);
   pointer-events:none;
   animation:battleDamagePop .9s ease both;
 }
-.battle-panel.hit .battle-enemy,.battle-panel.hit .battle-fallback{animation:battleHit .34s ease}
-.battle-panel.defeated .battle-enemy,.battle-panel.defeated .battle-fallback{animation:battleDefeat .78s ease forwards}
 
-#tabs,.tabs{margin-bottom:8px!important}
-.tab{min-height:58px!important;font-size:15px!important;border-radius:10px!important}
-.content{padding-bottom:110px!important}
-
-.product{
-  grid-template-columns:92px 1fr 96px!important;
-  align-items:center!important;
-  padding:10px!important;
+/* タブ・メニューを見やすく */
+#tabs,.tabs{margin-bottom:6px!important}
+.tab{
+  min-height:48px!important;
+  font-size:13px!important;
+  border-radius:9px!important;
+  padding:6px 3px!important;
 }
-.product-img{width:92px!important;height:92px!important}
+.content{padding-bottom:104px!important}
+
+/* メニューカード：画像・説明・注文ボタンが1行で見える */
+.product{
+  grid-template-columns:72px 1fr 86px!important;
+  align-items:center!important;
+  gap:8px!important;
+  padding:8px!important;
+  margin-bottom:8px!important;
+}
+.product-img{width:72px!important;height:72px!important}
 .product .btn{
   grid-column:3!important;
   grid-row:1 / span 3!important;
   align-self:center!important;
-  min-height:46px!important;
-  padding:8px 10px!important;
+  min-height:40px!important;
+  padding:6px 8px!important;
+  font-size:14px!important;
   font-weight:800!important;
 }
 .product-title,.product-desc,.product-price{grid-column:2!important}
-.product-title{font-size:17px!important}
-.product-price{font-size:18px!important}
+.product-title{font-size:15px!important;margin-bottom:2px!important}
+.product-desc{font-size:11px!important;line-height:1.32!important}
+.product-price{font-size:15px!important;margin:4px 0!important}
 
+/* 下部操作は固定 */
 .bottom-bar{
   position:absolute!important;
   left:14px!important;
@@ -95,21 +109,42 @@
   background:rgba(0,0,0,.70)!important;
   box-shadow:var(--shadow)!important;
 }
+.bottom-bar .btn{min-height:48px!important}
+
+/* 戦闘アニメ */
+.battle-panel.hit .battle-enemy,.battle-panel.hit .battle-fallback{animation:battleHit .34s ease}
+.battle-panel.defeated .battle-enemy,.battle-panel.defeated .battle-fallback{animation:battleDefeat .78s ease forwards}
 
 @keyframes battleHit{
   0%,100%{transform:translateX(-50%) translateY(0)}
-  20%{transform:translateX(calc(-50% - 10px)) translateY(-4px)}
-  40%{transform:translateX(calc(-50% + 10px)) translateY(2px)}
-  60%{transform:translateX(calc(-50% - 7px)) translateY(-2px)}
-  80%{transform:translateX(calc(-50% + 5px)) translateY(1px)}
+  20%{transform:translateX(calc(-50% - 7px)) translateY(-3px)}
+  40%{transform:translateX(calc(-50% + 7px)) translateY(2px)}
+  60%{transform:translateX(calc(-50% - 5px)) translateY(-2px)}
+  80%{transform:translateX(calc(-50% + 4px)) translateY(1px)}
 }
 @keyframes battleDefeat{
   0%{opacity:1;transform:translateX(-50%) scale(1)}
   45%{opacity:.85;transform:translateX(-50%) scale(1.08)}
-  100%{opacity:0;transform:translateX(-50%) scale(.72) translateY(18px)}
+  100%{opacity:0;transform:translateX(-50%) scale(.72) translateY(14px)}
 }
 @keyframes battleDamagePop{
-  0%{opacity:0;transform:translateX(-50%) translateY(12px) scale(.7)}
-  25%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.15)}
-  100%{opacity:0;transform:translateX(-50%) translateY(-38px) scale(1)}
+  0%{opacity:0;transform:translateX(-50%) translateY(10px) scale(.7)}
+  25%{opacity:1;transform:translateX(-50%) translateY(0) scale(1.12)}
+  100%{opacity:0;transform:translateX(-50%) translateY(-30px) scale(1)}
+}
+
+/* 低い画面ではさらに詰める */
+@media (max-height:740px){
+  #screenMenu .guild-card{padding:8px 12px!important}
+  #screenMenu .adventurer{font-size:13px!important}
+  #screenMenu .level-badge{font-size:15px!important}
+  .battle-panel{height:62px;margin:-4px 0 3px}
+  .battle-field{height:62px}
+  .battle-enemy{max-height:66px;max-width:23%;bottom:-5px}
+  .tab{min-height:44px!important;font-size:12px!important}
+  .product{grid-template-columns:64px 1fr 82px!important;padding:7px!important;margin-bottom:7px!important}
+  .product-img{width:64px!important;height:64px!important}
+  .product-title{font-size:14px!important}
+  .product-desc{font-size:10.5px!important}
+  .product-price{font-size:14px!important}
 }

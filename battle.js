@@ -1,4 +1,4 @@
-/* おたく場ギルド 討伐システムβ */
+/* おたく場ギルド 討伐システムβ v6 */
 (function(){
   "use strict";
 
@@ -40,6 +40,7 @@
   function ensurePanel(){
     let panel = $("battlePanel");
     if(panel) return panel;
+
     const menu = $("screenMenu");
     const tabs = $("tabs") || document.querySelector("#screenMenu .tabs");
     if(!menu || !tabs) return null;
@@ -84,6 +85,7 @@
     const s = load();
     const e = current(s);
     const cleared = s.index >= ENEMIES.length;
+
     setAppBackground(cleared ? {bg:"castle.png"} : e);
 
     const img = $("battleEnemyImg");
@@ -112,7 +114,9 @@
           fallback.textContent = e.icon || "⚔️";
         }
       };
-      img.onload = function(){ if(fallback) fallback.classList.add("hidden"); };
+      img.onload = function(){
+        if(fallback) fallback.classList.add("hidden");
+      };
     }
 
     const hp = Math.max(0, Number(s.hp || e.hp));
