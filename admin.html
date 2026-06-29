@@ -20,11 +20,62 @@ html.admin-locked .admin-app{display:none!important}
 .customer-meta .mini{border:1px solid rgba(255,255,255,.22);border-radius:10px;padding:8px;background:rgba(255,255,255,.035);text-align:center}
 .customer-meta .mini span{display:block;font-size:11px;opacity:.75;margin-bottom:4px}.customer-meta .mini b{color:var(--green);font-size:15px}
 .customer-form{display:grid;gap:8px}.customer-form label{display:grid;gap:4px;color:var(--gold);font-size:12px}.customer-form textarea{min-height:72px}.customer-savebar{position:sticky;bottom:10px;z-index:30;margin-top:12px;background:rgba(0,0,0,.72);border:1px solid rgba(246,200,79,.55);border-radius:14px;padding:10px;backdrop-filter:blur(2px);-webkit-backdrop-filter:blur(2px)}
+.asset-preview{display:grid;grid-template-columns:1fr 92px;gap:8px;align-items:center}.asset-preview img{width:92px;height:92px;object-fit:cover;border:1px solid var(--line);border-radius:10px;background:#000}.asset-preview.enemy img{object-fit:contain}.asset-note{font-size:11px;opacity:.75;color:var(--gold)}
 @media (max-width:719px){.customer-meta{grid-template-columns:1fr 1fr}.customer-card{padding:10px}.customer-name{font-size:18px}.table.customer-old{display:none}}
-</style><script>(function(){if(localStorage.getItem('otakubaAdminAuth.v1')!=='ok')document.documentElement.classList.add('admin-locked')})();</script></head><body><div id="adminLogin"><div class="panel login-card"><div class="login-title">🔐 管理者ログイン</div><p class="tiny">パスワードを入力してください</p><input id="adminPassInput" type="password" placeholder="パスワード"><button class="btn gold" id="adminLoginBtn" style="width:100%;margin-top:10px">ログイン</button><div id="adminLoginError" class="login-error"></div><button class="btn small" onclick="location.href='index.html'" style="width:100%;margin-top:8px">一般画面へ戻る</button></div></div><div class="admin-app"><div id="toast" class="toast"></div><div class="admin-head"><h1>おたく場ギルド 管理画面 <span class="tiny">v3.0</span></h1><button class="btn small" onclick="location.href='index.html'">一般画面</button><button class="btn red small" id="adminLogoutBtn">ログアウト</button></div><div class="admin-tabs" id="tabs"></div><div id="sections"></div></div><script>
+</style><script>(function(){try{localStorage.removeItem('otakubaAdminAuth.v1')}catch(e){};if(sessionStorage.getItem('otakubaAdminSession.v1')!=='ok')document.documentElement.classList.add('admin-locked')})();</script></head><body><div id="adminLogin"><div class="panel login-card"><div class="login-title">🔐 管理者ログイン</div><p class="tiny">パスワードを入力してください</p><input id="adminPassInput" type="password" placeholder="パスワード"><button class="btn gold" id="adminLoginBtn" style="width:100%;margin-top:10px">ログイン</button><div id="adminLoginError" class="login-error"></div><button class="btn small" onclick="location.href='index.html'" style="width:100%;margin-top:8px">一般画面へ戻る</button></div></div><div class="admin-app"><div id="toast" class="toast"></div><div class="admin-head"><h1>おたく場ギルド 管理画面 <span class="tiny">v3.0</span></h1><button class="btn small" onclick="location.href='index.html'">一般画面</button><button class="btn red small" id="adminLogoutBtn">ログアウト</button></div><div class="admin-tabs" id="tabs"></div><div id="sections"></div></div><script>
 (function(){'use strict';
 const APP_VERSION='3.0-fixed10-overflow'; const DEFAULT_GAS_URL='https://script.google.com/macros/s/AKfycbzX6hTXf6HWtpVarXymnKc2xGA6BhkmIhXMu4QIweqHJlkADWLlHDIM0daJJuXXJgjpLA/exec'; const KEY='otakubaGuildApp.v1.complete'; const OLD='otakubaGuildApp.v2.masterMenu';
 const CATS={food:'フード',drink:'ドリンク',alcohol:'アルコール',dessert:'デザート',event:'イベント'}; const CAT_KEYS=Object.keys(CATS);
+
+const STAGE_ASSETS=[
+  {id:'grass',label:'草原',file:'grass.png'},
+  {id:'forest',label:'森',file:'forest.png'},
+  {id:'cave',label:'洞窟',file:'cave.png'},
+  {id:'ruins',label:'遺跡',file:'ruins.png'},
+  {id:'mountain',label:'山岳',file:'mountain.png'},
+  {id:'volcano',label:'火山',file:'volcano.png'},
+  {id:'castle',label:'魔王城',file:'castle.png'}
+];
+const ENEMY_ASSETS=[
+  {id:'slime',label:'スライム',file:'slime.png'},
+  {id:'goblin',label:'ゴブリン',file:'goblin.png'},
+  {id:'orc',label:'オーク',file:'orc.png'},
+  {id:'skeleton',label:'スケルトン',file:'skeleton.png'},
+  {id:'mimic',label:'ミミック',file:'mimic.png'},
+  {id:'gargoyle',label:'ガーゴイル',file:'gargoyle.png'},
+  {id:'dark_wizard',label:'ダークウィザード',file:'dark_wizard.png'},
+  {id:'minotaur',label:'ミノタウロス',file:'minotaur.png'},
+  {id:'dragon',label:'ドラゴン',file:'dragon.png'},
+  {id:'maou',label:'魔王',file:'maou.png'}
+];
+const BGM_ASSETS=[
+  {id:'',label:'自動',file:''},
+  {id:'title',label:'タイトル',file:'冒険への誘い.mp3'},
+  {id:'slime',label:'スライム戦',file:'maou_bgm_fantasy15.mp3'},
+  {id:'goblin',label:'通常戦闘A',file:'Baring_Their_Fangs.mp3'},
+  {id:'orc',label:'通常戦闘B',file:'反撃の一矢.mp3'},
+  {id:'cave',label:'洞窟戦',file:'Rumbling.mp3'},
+  {id:'ruins',label:'遺跡戦',file:'龍太鼓.mp3'},
+  {id:'maou',label:'魔王戦',file:'Extinguish.mp3'},
+  {id:'ending',label:'エンディング',file:'March_for__delightful_future.mp3'}
+];
+function assetFile(list,val,fallback){
+  val=String(val||'').trim();
+  if(!val)return fallback||'';
+  const hit=list.find(a=>a.file===val||a.label===val||a.id===val);
+  return hit?hit.file:val;
+}
+function assetLabel(list,val){
+  val=String(val||'').trim();
+  const hit=list.find(a=>a.file===val||a.label===val||a.id===val);
+  return hit?hit.label:val;
+}
+function stageLabelForBg(bg,stage){return assetLabel(STAGE_ASSETS, bg||stage)||stage||'草原'}
+function bgFileForStage(stageOrBg){return assetFile(STAGE_ASSETS, stageOrBg, 'grass.png')}
+function enemyFile(nameOrFile){return assetFile(ENEMY_ASSETS, nameOrFile, 'slime.png')}
+function isKnownBg(v){return !!STAGE_ASSETS.find(a=>a.file===v||a.label===v||a.id===v)}
+function isKnownEnemyImg(v){return !!ENEMY_ASSETS.find(a=>a.file===v||a.label===v||a.id===v)}
+
 const TABS=[['dash','📊 ダッシュボード'],['menu','🍴 メニュー管理'],['orders','📦 注文管理'],['sales','💰 売上管理'],['customers','👤 顧客管理'],['battle','⚔️ 討伐システム'],['notice','📢 本日のお知らせ'],['notify','🔔 通知設定'],['design','🎨 デザイン設定'],['data','💾 データ管理']];
 function uid(){return 'id'+Math.random().toString(36).slice(2,9)+Date.now().toString(36)}
 function defaultProducts(){return [{id:uid(),cat:'food',name:'唐揚げ',price:600,emoji:'🍗',desc:'ギルド定番のフード。',image:''},{id:uid(),cat:'food',name:'ポテト',price:500,emoji:'🍟',desc:'みんなでつまめる。',image:''},{id:uid(),cat:'drink',name:'コーラ',price:400,emoji:'🥤',desc:'ソフトドリンク。',image:''},{id:uid(),cat:'drink',name:'メロンソーダ',price:400,emoji:'🥤',desc:'緑の回復薬。',image:''},{id:uid(),cat:'alcohol',name:'生ビール',price:600,emoji:'🍺',desc:'酒場の基本。',image:''},{id:uid(),cat:'alcohol',name:'ハイボール',price:550,emoji:'🥃',desc:'強炭酸。',image:''},{id:uid(),cat:'dessert',name:'アイス',price:350,emoji:'🍨',desc:'食後の甘味。',image:''},{id:uid(),cat:'event',name:'本日の限定',price:700,emoji:'🎉',desc:'イベントメニュー。',image:''}]}
@@ -41,8 +92,8 @@ function defaultEnemies(){return [
 {id:'maou',name:'魔王',stage:'魔王城',hp:3000,maxHp:3000,bg:'castle.png',background:'castle.png',image:'maou.png'}
 ]}
 function defaults(){return {products:defaultProducts(),orders:[],sales:[],customers:[],settings:{notice:{enabled:false,title:'本日のお知らせ',body:'',position:'top'},gasUrl:DEFAULT_GAS_URL,notifyOn:true,currentEnemyIndex:0,enemies:defaultEnemies(),design:{bg:'background.jpg',bgm:''},sharedOrders:[],gasLog:[]},currentCustomer:'',currentCustomerId:''}}
-function normalizeEnemy(e,i){const base=defaultEnemies()[i%defaultEnemies().length]||defaultEnemies()[0]; e=e||{}; const max=Number(e.maxHp||e.hp||base.maxHp||100)||100; const hp=Number.isFinite(Number(e.hp))?Math.max(0,Number(e.hp)):max; return {id:e.id||base.id||('enemy_'+(i+1)),name:e.name||base.name||('敵'+(i+1)),stage:e.stage||base.stage||'草原',hp:hp,maxHp:max,bg:e.bg||e.background||base.bg||base.background||'grass.png',background:e.background||e.bg||base.background||base.bg||'grass.png',image:e.image||base.image||'slime.png',bgm:e.bgm||base.bgm||''};}
-function migrate(o){const d=defaults(); if(!o||typeof o!=='object')return d; o.products=Array.isArray(o.products)&&o.products.length?o.products:d.products; o.orders=Array.isArray(o.orders)?o.orders:[]; o.sales=Array.isArray(o.sales)?o.sales:[]; o.customers=Array.isArray(o.customers)?o.customers:[]; o.customers.forEach(c=>{if(c&&!c.id)c.id=uid()}); o.settings=o.settings||{}; o.settings.notice=o.settings.notice||d.settings.notice; const oldEnemies=Array.isArray(o.settings.enemies)?o.settings.enemies:[]; o.settings.enemies=(oldEnemies.length?oldEnemies:defaultEnemies()).map(normalizeEnemy); o.settings.currentEnemyIndex=Number.isFinite(+o.settings.currentEnemyIndex)?Math.max(0,Math.min(o.settings.enemies.length-1,+o.settings.currentEnemyIndex)):0; o.settings.gasUrl=o.settings.gasUrl||DEFAULT_GAS_URL; o.settings.notifyOn=o.settings.notifyOn!==false; o.settings.design=o.settings.design||d.settings.design; o.settings.sharedOrders=Array.isArray(o.settings.sharedOrders)?o.settings.sharedOrders:[]; o.settings.gasLog=Array.isArray(o.settings.gasLog)?o.settings.gasLog:[]; o.currentCustomerId=o.currentCustomerId||''; if(!o.currentCustomer&&o.name)o.currentCustomer=o.name; return o;}
+function normalizeEnemy(e,i){const base=defaultEnemies()[i%defaultEnemies().length]||defaultEnemies()[0]; e=e||{}; const max=Number(e.maxHp||e.hp||base.maxHp||100)||100; const hp=Number.isFinite(Number(e.hp))?Math.max(0,Number(e.hp)):max; const bg=assetFile(STAGE_ASSETS, e.bg||e.background||e.stage||base.bg||base.background, base.bg||'grass.png'); const img=assetFile(ENEMY_ASSETS, e.image||e.name||base.image, base.image||'slime.png'); const stage=assetLabel(STAGE_ASSETS, e.stage||bg)||e.stage||base.stage||'草原'; return {id:e.id||base.id||('enemy_'+(i+1)),name:e.name||assetLabel(ENEMY_ASSETS,img)||base.name||('敵'+(i+1)),stage:stage,hp:hp,maxHp:max,bg:bg,background:bg,image:img,bgm:e.bgm||base.bgm||''};}
+function migrate(o){const d=defaults(); if(!o||typeof o!=='object')return d; o.products=Array.isArray(o.products)&&o.products.length?o.products:d.products; o.orders=Array.isArray(o.orders)?o.orders:[]; o.sales=Array.isArray(o.sales)?o.sales:[]; o.customers=Array.isArray(o.customers)?o.customers:[]; o.customers.forEach(c=>{if(c&&!c.id)c.id=uid()}); o.settings=o.settings||{}; o.settings.notice=o.settings.notice||d.settings.notice; const oldEnemies=Array.isArray(o.settings.enemies)?o.settings.enemies:[]; const hasOldBroken=oldEnemies.length>10 || oldEnemies.some(e=>e&&((e.bg||e.background)&&!isKnownBg(e.bg||e.background||e.stage)||(e.image&&!isKnownEnemyImg(e.image)))); o.settings.enemies=(oldEnemies.length&&!hasOldBroken?oldEnemies:defaultEnemies()).map(normalizeEnemy); o.settings.currentEnemyIndex=Number.isFinite(+o.settings.currentEnemyIndex)?Math.max(0,Math.min(o.settings.enemies.length-1,+o.settings.currentEnemyIndex)):0; o.settings.gasUrl=o.settings.gasUrl||DEFAULT_GAS_URL; o.settings.notifyOn=o.settings.notifyOn!==false; o.settings.design=o.settings.design||d.settings.design; o.settings.sharedOrders=Array.isArray(o.settings.sharedOrders)?o.settings.sharedOrders:[]; o.settings.gasLog=Array.isArray(o.settings.gasLog)?o.settings.gasLog:[]; o.currentCustomerId=o.currentCustomerId||''; if(!o.currentCustomer&&o.name)o.currentCustomer=o.name; return o;}
 function load(){try{let cur=JSON.parse(localStorage.getItem(KEY)); if(cur)return migrate(cur); let old=JSON.parse(localStorage.getItem(OLD)); if(old){old.currentCustomer=old.name||old.currentCustomer||''; return migrate(old)}}catch(e){} return defaults()} let state=load(); function save(){localStorage.setItem(KEY,JSON.stringify(state)); localStorage.setItem(OLD,JSON.stringify(state))}
 function $(id){return document.getElementById(id)} function fileUrl(name){name=String(name||'').trim(); if(!name)return 'background.jpg'; if(/^data:image\//.test(name)||/^https?:\/\//.test(name))return name; return name.replace(/\\/g,'/').replace(/^\/+/, '')} function yen(n){return (Number(n)||0).toLocaleString('ja-JP')+'G'} function esc(s){return String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]))} function today(){return new Date().toLocaleDateString('ja-JP',{timeZone:'Asia/Tokyo'})}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('show');clearTimeout(toast.t);toast.t=setTimeout(()=>t.classList.remove('show'),1600)}
@@ -86,9 +137,10 @@ function optionList(list,val){return list.map(x=>'<option value="'+esc(x[0])+'" 
 function renderBattleSec(){
   const idx=Number(state.settings.currentEnemyIndex)||0;
   const cur=currentEnemy();
-  const bgOptions=[['grass.png','草原'],['forest.png','森'],['cave.png','洞窟'],['ruins.png','遺跡'],['mountain.png','山岳'],['volcano.png','火山'],['castle.png','魔王城']];
-  const imgOptions=[['slime.png','スライム'],['goblin.png','ゴブリン'],['orc.png','オーク'],['skeleton.png','スケルトン'],['mimic.png','ミミック'],['gargoyle.png','ガーゴイル'],['dark_wizard.png','ダークウィザード'],['minotaur.png','ミノタウロス'],['dragon.png','ドラゴン'],['maou.png','魔王']];
-  const bgmOptions=[['','自動'],['title','タイトル'],['slime','スライム戦'],['goblin','通常戦闘A'],['orc','通常戦闘B'],['cave','洞窟戦'],['ruins','遺跡戦'],['maou','魔王戦'],['ending','エンディング']];
+  const stageOptions=STAGE_ASSETS.map(a=>[a.label,a.label]);
+  const bgOptions=STAGE_ASSETS.map(a=>[a.file,a.label]);
+  const imgOptions=ENEMY_ASSETS.map(a=>[a.file,a.label]);
+  const bgmOptions=BGM_ASSETS.map(a=>[a.id,a.label+(a.file?' / '+a.file:'')]);
   const rows=state.settings.enemies.map((e,i)=>{
     const active=i===idx;
     const hp=Number(e.hp||0), max=Number(e.maxHp||e.hp||1);
@@ -97,12 +149,12 @@ function renderBattleSec(){
       + '<div class="item-title">#'+(i+1)+' '+esc(e.name)+(active?' <span class="badge">現在</span>':'')+'</div>'
       + '<div class="form">'
       + '<label>敵名<input data-enemy="'+i+'" data-field="name" value="'+esc(e.name||'')+'"></label>'
-      + '<label>ステージ名<input data-enemy="'+i+'" data-field="stage" value="'+esc(e.stage||'')+'" placeholder="例：森"></label>'
+      + '<label>ステージ<select data-enemy="'+i+'" data-field="stage">'+optionList(stageOptions,assetLabel(STAGE_ASSETS,e.stage||e.bg||e.background))+'</select></label>'
       + '<label>現在HP<input type="number" min="0" data-enemy="'+i+'" data-field="hp" value="'+esc(e.hp||0)+'"></label>'
       + '<label>最大HP（金額）<input type="number" min="1" data-enemy="'+i+'" data-field="maxHp" value="'+esc(e.maxHp||e.hp||100)+'"></label>'
-      + '<label>背景<select data-enemy="'+i+'" data-field="bg">'+optionList(bgOptions,e.bg||e.background)+'</select></label>'
-      + '<label>敵画像<select data-enemy="'+i+'" data-field="image">'+optionList(imgOptions,e.image)+'</select></label>'
-      + '<label>BGM<select data-enemy="'+i+'" data-field="bgm">'+optionList(bgmOptions,e.bgm||'')+'</select></label>'
+      + '<label class="asset-preview">背景<select data-enemy="'+i+'" data-field="bg">'+optionList(bgOptions,assetFile(STAGE_ASSETS,e.bg||e.background||e.stage,'grass.png'))+'</select><img src="'+esc(fileUrl(assetFile(STAGE_ASSETS,e.bg||e.background||e.stage,'grass.png')))+'" onerror="this.style.opacity=.25"></label>'
+      + '<label class="asset-preview enemy">敵画像<select data-enemy="'+i+'" data-field="image">'+optionList(imgOptions,assetFile(ENEMY_ASSETS,e.image||e.name,'slime.png'))+'</select><img src="'+esc(fileUrl(assetFile(ENEMY_ASSETS,e.image||e.name,'slime.png')))+'" onerror="this.style.opacity=.25"></label>'
+      + '<label>BGM<select data-enemy="'+i+'" data-field="bgm">'+optionList(bgmOptions,e.bgm||'')+'</select><span class="asset-note">音源はGitHub直下にある登録済みBGMから選択</span></label>'
       + '</div>'
       + '<div style="height:10px;border:1px solid var(--white);border-radius:999px;overflow:hidden;background:#200;margin:8px 0"><div style="height:100%;width:'+pct+'%;background:linear-gradient(90deg,#73ff5f,#f6c84f)"></div></div>'
       + '<div class="toolbar"><button class="btn small" data-currentenemy="'+i+'">現在の敵にする</button><button class="btn small" data-healenemy="'+i+'">HP全回復</button><button class="btn small" data-dupenemy="'+i+'">複製</button><button class="btn red small" data-delenemy="'+i+'">削除</button></div>'
@@ -110,7 +162,7 @@ function renderBattleSec(){
   }).join('');
   return '<div class="admin-grid">'
     + '<div class="panel"><h2>現在の敵</h2><p><b class="goldtxt">#'+(idx+1)+' '+esc(cur.name)+'</b></p><p>HP '+cur.hp+' / '+cur.maxHp+'　ステージ：'+esc(cur.stage)+'</p><p class="tiny">敵・背景・BGM・HPはここで変更できます。スケルトン3体、森にゴブリン2体＋オーク1体のように、複製して順番に並べればOK。</p><div class="toolbar"><button class="btn" id="prevEnemy">前の敵へ</button><button class="btn" id="nextEnemy">次の敵へ</button><button class="btn green" id="healEnemy">現在HP全回復</button><button class="btn gold" id="saveEnemies">討伐設定保存</button><button class="btn" id="addEnemy">敵を追加</button><button class="btn red" id="resetBattle">初期10体へ戻す</button></div></div>'
-    + '<div class="panel"><h2>討伐一覧</h2><p class="tiny">使える画像は10体、背景は7種に限定。ステージや敵は固定ではなく、イベント用に入れ替え可能です。</p><div class="list">'+rows+'</div></div>'
+    + '<div class="panel"><h2>討伐一覧</h2><p class="tiny">背景は背景7種、敵画像は敵10体だけをプルダウンで選択。ファイル名を手入力しないので入力ミスを防げます。</p><div class="list">'+rows+'</div></div>'
     + '</div>'
 }
 function renderNoticeSec(){const n=state.settings.notice||{};return '<div class="panel"><h2>本日のお知らせ</h2><div class="form"><label><input id="noticeEnabled" type="checkbox" style="width:auto" '+(n.enabled?'checked':'')+'> ON/OFF</label><input id="noticeTitle" value="'+esc(n.title||'')+'" placeholder="見出し"><textarea id="noticeBody" placeholder="本文">'+esc(n.body||'')+'</textarea><select id="noticePos"><option value="top" '+(n.position==='top'?'selected':'')+'>上部</option><option value="bottom" '+(n.position==='bottom'?'selected':'')+'>下部</option></select><button class="btn gold" id="saveNotice">保存</button></div></div>'}
@@ -130,7 +182,7 @@ function saveProduct(){let id=$('pId').value||uid(); let p=state.products.find(x
 function editProduct(id){let p=state.products.find(x=>x.id===id); if(!p)return; $('pId').value=p.id;$('pCat').value=p.cat;$('pName').value=p.name;$('pPrice').value=p.price;$('pEmoji').value=p.emoji||'';$('pImage').value=p.image||'';$('pDesc').value=p.desc||'';$('pHidden').checked=!!p.hidden; showPreview(p.image||''); window.scrollTo(0,0)}
 function cancelItem(id){let o=state.orders.find(x=>x.id===id); let p=state.products.find(x=>x.id===id); if(!o||!p)return; const reason=($('cancelReason')&&$('cancelReason').value)||'商品取消'; state.sales.push({id:uid(),type:'cancel',customer:state.currentCustomer||'端末内注文',items:[{id:p.id,name:p.name,qty:o.qty,price:p.price,subtotal:p.price*o.qty}],total:p.price*o.qty,time:new Date().toISOString(),timeText:new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}),reason}); state.orders=state.orders.filter(x=>x.id!==id); render();toast('取消として保存しました')}
 function cancelAll(){const items=orderItems(); if(!items.length){toast('受注がありません');return} const reason=$('cancelReason').value||'全キャンセル'; state.sales.push({id:uid(),type:'cancel',customer:state.currentCustomer||'端末内注文',items,total:items.reduce((s,i)=>s+i.subtotal,0),time:new Date().toISOString(),timeText:new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'}),reason}); state.orders=[]; render();toast('全キャンセルを保存しました')}
-function saveEnemies(){document.querySelectorAll('[data-enemy]').forEach(inp=>{let e=state.settings.enemies[Number(inp.dataset.enemy)]; if(!e)return; let f=inp.dataset.field; e[f]=(f==='hp'||f==='maxHp')?Number(inp.value)||0:inp.value; if(f==='bg')e.background=e.bg}); state.settings.enemies.forEach((e,i)=>{if(!e.id)e.id='enemy_'+(i+1)+'_'+uid(); e.maxHp=Math.max(1,Number(e.maxHp||e.hp||100)); e.hp=Math.max(0,Math.min(Number(e.hp||0),e.maxHp)); if(!e.background)e.background=e.bg}); render();toast('討伐設定を保存しました')}
+function saveEnemies(){document.querySelectorAll('[data-enemy]').forEach(inp=>{let e=state.settings.enemies[Number(inp.dataset.enemy)]; if(!e)return; let f=inp.dataset.field; let v=inp.value; if(f==='hp'||f==='maxHp')v=Number(v)||0; if(f==='bg')v=assetFile(STAGE_ASSETS,v,'grass.png'); if(f==='image')v=assetFile(ENEMY_ASSETS,v,'slime.png'); e[f]=v; if(f==='bg')e.background=v;}); state.settings.enemies.forEach((e,i)=>{if(!e.id)e.id='enemy_'+(i+1)+'_'+uid(); e.bg=assetFile(STAGE_ASSETS,e.bg||e.background||e.stage,'grass.png'); e.background=e.bg; e.image=assetFile(ENEMY_ASSETS,e.image||e.name,'slime.png'); e.stage=assetLabel(STAGE_ASSETS,e.stage||e.bg)||'草原'; e.maxHp=Math.max(1,Number(e.maxHp||e.hp||100)); e.hp=Math.max(0,Math.min(Number(e.hp||0),e.maxHp));}); render();toast('討伐設定を保存しました')}
 function saveCustomers(){document.querySelectorAll('[data-customer]').forEach(inp=>{let c=state.customers.find(x=>x.id===inp.dataset.customer); if(c){let f=inp.dataset.field;c[f]=f==='level'?Number(inp.value)||1:inp.value}});render();toast('顧客情報保存')}
 function logGas(action,orderId,result){state.settings.gasLog=state.settings.gasLog||[]; state.settings.gasLog.push({action,orderId,result,time:new Date().toISOString(),timeText:new Date().toLocaleString('ja-JP',{timeZone:'Asia/Tokyo'})}); state.settings.gasLog=state.settings.gasLog.slice(-30); save()}
 async function fetchGas(){const input=$('gasFetchUrl'); const url=((input&&input.value)||state.settings.gasUrl||DEFAULT_GAS_URL||'').trim(); if(!url){toast('GAS URLを入力');return} state.settings.gasUrl=url; save(); const box=$('gasResult'); if(box)box.innerHTML='<div class="empty">共有注文を取得中...</div>'; try{let r=await fetch(url+(url.includes('?')?'&':'?')+'action=listOrders&t='+Date.now(),{cache:'no-store'}); let t=await r.text(); let data; try{data=JSON.parse(t)}catch(e){r=await fetch(url+(url.includes('?')?'&':'?')+'action=list&t='+Date.now(),{cache:'no-store'}); t=await r.text(); data=JSON.parse(t)} const orders=normalizeGasOrders(data); state.settings.sharedOrders=orders; save(); if(box)box.innerHTML=renderGasOrdersHtml(orders); bindGasButtons(); logGas('listOrders','',orders.length+'件取得'); toast('共有注文を同期しました')}catch(e){if(box)box.innerHTML='<div class="code">取得失敗: '+esc(e.message)+'\nGAS URL・デプロイ・アクセス権を確認してください。\n?action=listOrders がJSONを返す必要があります。</div>'; logGas('listOrders','','取得失敗 '+e.message); toast('共有注文の取得に失敗')}}
@@ -140,4 +192,4 @@ async function sendGasAction(id,action,itemId,currentQty){const input=$('gasFetc
 async function sendTest(){const url=($('gasUrl').value||'').trim(); if(!url){toast('URL未設定');return} try{await fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify({action:'test',message:'おたく場ギルド通知テスト',time:new Date().toISOString()})});toast('通知テスト送信')}catch(e){toast('送信失敗')}}
 initTabs(); render();
 })();
-</script><script>(function(){const input=document.getElementById('adminPassInput');const btn=document.getElementById('adminLoginBtn');const err=document.getElementById('adminLoginError');function login(){if((input.value||'').trim()==='OTAKU'){localStorage.setItem('otakubaAdminAuth.v1','ok');document.documentElement.classList.remove('admin-locked');err.textContent=''}else{err.textContent='パスワードが違います';input.value='';input.focus()}}if(btn)btn.onclick=login;if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter')login()});const out=document.getElementById('adminLogoutBtn');if(out)out.onclick=function(){localStorage.removeItem('otakubaAdminAuth.v1');document.documentElement.classList.add('admin-locked');if(input){input.value='';setTimeout(()=>input.focus(),50)}}})();</script></body></html>
+</script><script>(function(){const input=document.getElementById('adminPassInput');const btn=document.getElementById('adminLoginBtn');const err=document.getElementById('adminLoginError');function login(){if((input.value||'').trim()==='OTAKU'){try{localStorage.removeItem('otakubaAdminAuth.v1');sessionStorage.setItem('otakubaAdminSession.v1','ok')}catch(e){}document.documentElement.classList.remove('admin-locked');err.textContent=''}else{err.textContent='パスワードが違います';input.value='';input.focus()}}if(btn)btn.onclick=login;if(input)input.addEventListener('keydown',e=>{if(e.key==='Enter')login()});const out=document.getElementById('adminLogoutBtn');if(out)out.onclick=function(){try{localStorage.removeItem('otakubaAdminAuth.v1');sessionStorage.removeItem('otakubaAdminSession.v1')}catch(e){}document.documentElement.classList.add('admin-locked');if(input){input.value='';setTimeout(()=>input.focus(),50)}}})();</script></body></html>
