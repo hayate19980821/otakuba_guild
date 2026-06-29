@@ -5,7 +5,11 @@
     "hp": 500,
     "stage": "草原",
     "background": "grass.png",
-    "image": "slime.png"
+    "image": "slime.png",
+    "maxHp": 500,
+    "bgm": "slime",
+    "boss": false,
+    "final": false
   },
   {
     "id": "goblin_1",
@@ -13,7 +17,11 @@
     "hp": 500,
     "stage": "森",
     "background": "forest.png",
-    "image": "goblin.png"
+    "image": "goblin.png",
+    "maxHp": 500,
+    "bgm": "goblin",
+    "boss": false,
+    "final": false
   },
   {
     "id": "goblin_2",
@@ -21,7 +29,11 @@
     "hp": 500,
     "stage": "森",
     "background": "forest.png",
-    "image": "goblin.png"
+    "image": "goblin.png",
+    "maxHp": 500,
+    "bgm": "goblin",
+    "boss": false,
+    "final": false
   },
   {
     "id": "goblin_3",
@@ -29,7 +41,11 @@
     "hp": 500,
     "stage": "森",
     "background": "forest.png",
-    "image": "goblin.png"
+    "image": "goblin.png",
+    "maxHp": 500,
+    "bgm": "goblin",
+    "boss": false,
+    "final": false
   },
   {
     "id": "orc_1",
@@ -37,7 +53,11 @@
     "hp": 2500,
     "stage": "山",
     "background": "mountain.png",
-    "image": "orc.png"
+    "image": "orc.png",
+    "maxHp": 2500,
+    "bgm": "orc",
+    "boss": false,
+    "final": false
   },
   {
     "id": "orc_2",
@@ -45,7 +65,11 @@
     "hp": 2500,
     "stage": "山",
     "background": "mountain.png",
-    "image": "orc.png"
+    "image": "orc.png",
+    "maxHp": 2500,
+    "bgm": "orc",
+    "boss": false,
+    "final": false
   },
   {
     "id": "skeleton_1",
@@ -53,7 +77,11 @@
     "hp": 1000,
     "stage": "洞窟",
     "background": "cave.png",
-    "image": "skeleton.png"
+    "image": "skeleton.png",
+    "maxHp": 1000,
+    "bgm": "cave",
+    "boss": false,
+    "final": false
   },
   {
     "id": "skeleton_2",
@@ -61,7 +89,11 @@
     "hp": 1000,
     "stage": "洞窟",
     "background": "cave.png",
-    "image": "skeleton.png"
+    "image": "skeleton.png",
+    "maxHp": 1000,
+    "bgm": "cave",
+    "boss": false,
+    "final": false
   },
   {
     "id": "mimic_1",
@@ -69,7 +101,11 @@
     "hp": 2500,
     "stage": "洞窟",
     "background": "cave.png",
-    "image": "mimic.png"
+    "image": "mimic.png",
+    "maxHp": 2500,
+    "bgm": "cave",
+    "boss": false,
+    "final": false
   },
   {
     "id": "mimic_2",
@@ -77,7 +113,11 @@
     "hp": 2500,
     "stage": "洞窟",
     "background": "cave.png",
-    "image": "mimic.png"
+    "image": "mimic.png",
+    "maxHp": 2500,
+    "bgm": "cave",
+    "boss": false,
+    "final": false
   },
   {
     "id": "gargoyle",
@@ -85,7 +125,11 @@
     "hp": 5000,
     "stage": "遺跡",
     "background": "ruins.png",
-    "image": "gargoyle.png"
+    "image": "gargoyle.png",
+    "maxHp": 5000,
+    "bgm": "ruins",
+    "boss": true,
+    "final": false
   },
   {
     "id": "dark_wizard",
@@ -93,7 +137,11 @@
     "hp": 10000,
     "stage": "遺跡",
     "background": "ruins.png",
-    "image": "dark_wizard.png"
+    "image": "dark_wizard.png",
+    "maxHp": 10000,
+    "bgm": "ruins",
+    "boss": true,
+    "final": false
   },
   {
     "id": "minotaur",
@@ -101,7 +149,11 @@
     "hp": 10000,
     "stage": "火山",
     "background": "volcano.png",
-    "image": "minotaur.png"
+    "image": "minotaur.png",
+    "maxHp": 10000,
+    "bgm": "goblin",
+    "boss": true,
+    "final": false
   },
   {
     "id": "dragon",
@@ -109,7 +161,11 @@
     "hp": 15000,
     "stage": "王城前",
     "background": "castle.png",
-    "image": "dragon.png"
+    "image": "dragon.png",
+    "maxHp": 15000,
+    "bgm": "orc",
+    "boss": true,
+    "final": false
   },
   {
     "id": "maou",
@@ -117,6 +173,10 @@
     "hp": 20000,
     "stage": "魔王城 玉座",
     "background": "castle.png",
-    "image": "maou.png"
+    "image": "maou.png",
+    "maxHp": 20000,
+    "bgm": "maou",
+    "boss": true,
+    "final": true
   }
 ]
