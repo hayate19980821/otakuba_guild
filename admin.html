@@ -55,6 +55,7 @@ textarea{min-height:74px;resize:vertical}
       <button class="tab" data-tab="sales">売上</button>
       <button class="tab" data-tab="customers">顧客</button>
       <button class="tab" data-tab="battle">討伐</button>
+      <button class="tab" data-tab="notice">本日</button>
       <button class="tab" data-tab="notify">通知</button>
       <button class="tab" data-tab="design">デザイン</button>
       <button class="tab" data-tab="data">データ</button>
@@ -195,7 +196,7 @@ function saleTotal(rec){
 function itemName(i){return i.name||i.title||'商品'}
 function render(){
   document.querySelectorAll('.tab').forEach(b=>b.classList.toggle('active',b.dataset.tab===active));
-  ({dashboard,menu,sales,customers,battle:renderBattleTab,notify,design,data}[active]||dashboard)();
+  ({dashboard,menu,sales,customers,battle:renderBattleTab,notice,notify,design,data}[active]||dashboard)();
 }
 function mount(html){$('main').innerHTML=html}
 
@@ -220,6 +221,7 @@ function dashboard(){
       ${bm?.image?`<img class="preview-img" src="${esc(bm.image)}">`:''}</div>
       <div class="actions"><button class="btn" onclick="Admin.go('battle')">討伐設定へ</button><button class="btn" onclick="Admin.go('sales')">売上を見る</button></div>
     </div>
+    <div class="panel"><div class="section-title">本日のお知らせ</div><div class="item-sub">状態：${state.settings?.noticeOn?'表示ON':'表示OFF'}</div><div class="item-name">${esc(state.settings?.noticeTitle||'本日のお知らせ')}</div><div class="help">${esc(state.settings?.noticeText||'未設定')}</div><div class="actions"><button class="btn gold" onclick="Admin.go('notice')">お知らせ編集</button></div></div>
     <div class="panel"><div class="section-title">管理メニュー</div>
       <div class="grid2">
         <button class="btn gold" onclick="Admin.go('menu')">メニュー管理</button>
@@ -363,6 +365,49 @@ function resetBattleProgress(){const s={index:0,hp:battle.monsters[0]?.hp||500,t
 function nextMonster(){const s=loadBattleState();s.index=Math.min(battle.monsters.length-1,s.index+1);s.hp=battle.monsters[s.index]?.hp||500;saveBattleState(s);renderBattleTab()}
 function prevMonster(){const s=loadBattleState();s.index=Math.max(0,s.index-1);s.hp=battle.monsters[s.index]?.hp||500;saveBattleState(s);renderBattleTab()}
 
+
+function notice(){
+  const st=state.settings||{};
+  mount(`<div class="panel"><div class="section-title">本日のお知らせ</div>
+    <div class="help">QRコードから入った一般画面に出すお知らせ用。ON/OFFできます。</div>
+    <label><input type="checkbox" id="noticeOn" ${st.noticeOn?'checked':''}> 本日のお知らせを表示する</label>
+    <div class="field"><label>見出し</label><input id="noticeTitle" value="${esc(st.noticeTitle||'本日のお知らせ')}"></div>
+    <div class="field"><label>本文</label><textarea id="noticeText">${esc(st.noticeText||'')}</textarea></div>
+    <div class="field"><label>表示位置</label><select id="noticePlace">
+      <option value="top" ${st.noticePlace==='top'?'selected':''}>メニュー上部</option>
+      <option value="modal" ${st.noticePlace==='modal'?'selected':''}>入店時ポップアップ</option>
+      <option value="both" ${st.noticePlace==='both'?'selected':''}>両方</option>
+    </select></div>
+    <div class="panel" style="margin-top:10px">
+      <div class="section-title">${esc(st.noticeTitle||'本日のお知らせ')}</div>
+      <div class="help">${esc(st.noticeText||'ここにお知らせ本文が入ります。')}</div>
+      <div class="badge">${st.noticeOn?'表示ON':'表示OFF'}</div>
+    </div>
+    <div class="actions"><button class="btn gold" onclick="Admin.saveNotice()">保存</button><button class="btn red" onclick="Admin.clearNotice()">クリア</button></div>
+  </div>`);
+}
+function saveNotice(){
+  state.settings=state.settings||{};
+  state.settings.noticeOn=$('noticeOn').checked;
+  state.settings.noticeTitle=$('noticeTitle').value.trim()||'本日のお知らせ';
+  state.settings.noticeText=$('noticeText').value.trim();
+  state.settings.noticePlace=$('noticePlace').value;
+  saveApp();
+  toast('本日のお知らせを保存しました');
+  notice();
+}
+function clearNotice(){
+  state.settings=state.settings||{};
+  state.settings.noticeOn=false;
+  state.settings.noticeTitle='本日のお知らせ';
+  state.settings.noticeText='';
+  state.settings.noticePlace='top';
+  saveApp();
+  notice();
+  toast('クリアしました');
+}
+
+
 function notify(){
   const st=state.settings||{};
   mount(`<div class="panel"><div class="section-title">通知設定</div>
@@ -398,7 +443,7 @@ function importOpen(){try{const data=JSON.parse($('dataBox').value);if(data.app)
 function resetAll(){if(!confirm('全データを初期化しますか？'))return;localStorage.removeItem(APP_KEY);localStorage.removeItem(BATTLE_KEY);localStorage.removeItem(BATTLE_STATE_KEY);localStorage.removeItem(BATTLE_APPLIED_KEY);state=loadApp();battle=loadBattle();render();toast('初期化しました')}
 
 function closeModal(){$('editModal').classList.remove('on')}
-window.Admin={go(t){active=t;render()},openProduct,saveProduct,closeModal,copyProduct,deleteProduct,sortProducts,copySales,clearSales,saveCustomerMemo,deleteCustomer,saveBattleBase,saveMonster,addMonster,fill15,deleteMonster,moveMonster,resetBattleConfig,resetBattleProgress,nextMonster,prevMonster,saveNotify,testNotify,saveDesign,clearDesign,exportAll,importOpen,resetAll};
+window.Admin={go(t){active=t;render()},openProduct,saveProduct,closeModal,copyProduct,deleteProduct,sortProducts,copySales,clearSales,saveCustomerMemo,deleteCustomer,saveBattleBase,saveMonster,addMonster,fill15,deleteMonster,moveMonster,resetBattleConfig,resetBattleProgress,nextMonster,prevMonster,saveNotice,clearNotice,saveNotify,testNotify,saveDesign,clearDesign,exportAll,importOpen,resetAll};
 
 $('topTabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(!b)return;active=b.dataset.tab;render()});
 $('editModal').addEventListener('click',e=>{if(e.target.id==='editModal')closeModal()});
