@@ -50,6 +50,54 @@ window.GuildStorage = (() => {
     };
   }
 
+
+
+  function ensureMenuCategories(){
+    const names = {
+      beer_sour:{name:'ビール・サワー', icon:'🍺'},
+      shochu_cocktail:{name:'焼酎・カクテル', icon:'🍸'},
+      shot_bottle:{name:'ショット・ボトル', icon:'🥂'},
+      soft:{name:'ソフトドリンク', icon:'🥤'},
+      food:{name:'フード', icon:'🍟'},
+      charge:{name:'席料', icon:'💰'}
+    };
+    const current = Array.isArray(data.settings.categories) ? data.settings.categories : [];
+    const byId = {};
+    current.forEach(c=>{ if(c && c.id) byId[c.id] = {id:c.id, name:c.name||c.id, icon:c.icon||'🍽️'}; });
+    (data.menu||[]).forEach(p=>{
+      const id = p && (p.cat || p.category);
+      if(!id || id === 'charge') return;
+      if(!byId[id]){
+        const preset = names[id] || {name:id, icon:p.emoji||p.icon||'🍽️'};
+        byId[id] = {id, name:preset.name, icon:preset.icon};
+      }
+    });
+    const order = ['beer_sour','shochu_cocktail','shot_bottle','soft','food'];
+    const ordered = [];
+    order.forEach(id=>{ if(byId[id]) ordered.push(byId[id]); });
+    Object.keys(byId).forEach(id=>{ if(!order.includes(id)) ordered.push(byId[id]); });
+    data.settings.categories = ordered;
+  }
+
+
+  function menuCategorySet(menu){
+    const set = new Set();
+    (Array.isArray(menu)?menu:[]).forEach(p=>{ const id=p && (p.cat || p.category); if(id && id !== 'charge') set.add(id); });
+    return set;
+  }
+  function menuLooksComplete(menu){
+    const set = menuCategorySet(menu);
+    return ['beer_sour','shochu_cocktail','shot_bottle','soft','food'].every(id=>set.has(id));
+  }
+  function betterMenu(fileMenu, savedMenu){
+    const f = Array.isArray(fileMenu) ? fileMenu : [];
+    const s = Array.isArray(savedMenu) ? savedMenu : [];
+    // 本番menu.jsonは5カテゴリ入り。保存/GAS側がフードだけ等なら必ずmenu.jsonを採用する。
+    if(menuLooksComplete(f) && !menuLooksComplete(s)) return f;
+    if(menuLooksComplete(f) && f.length > s.length) return f;
+    return s.length ? s : f;
+  }
+
   async function init(){
     const defaults = {
       settings: await fetchJson(files.settings, {}),
@@ -85,7 +133,12 @@ window.GuildStorage = (() => {
     const legacy = !existing && !old ? migrateLegacy(get(keys.legacy, null)) : null;
     data = Object.assign({}, defaults, existing || old || legacy || {});
     data.settings = Object.assign({}, defaults.settings, data.settings || {});
-    data.menu = (Array.isArray(data.menu)&&data.menu.length?data.menu:defaults.menu).map(normalizeMenu);
+    // menu.json（本番メニュー）が保存済み/GASメニューより完全なら、menu.jsonを正として復旧する
+    // これでlocalStorage/GASに残った「フードだけ」の古いメニューに引っ張られない
+    const beforeMenu = (Array.isArray(data.menu) && data.menu.length) ? data.menu : [];
+    const pickedMenu = betterMenu(defaults.menu, beforeMenu);
+    data.menu = (Array.isArray(pickedMenu) ? pickedMenu : []).map(normalizeMenu);
+    ensureMenuCategories();
     data.monsters = (Array.isArray(data.monsters)&&data.monsters.length?data.monsters:defaults.monsters).map(normalizeMonster);
     data.customers = Array.isArray(data.customers)?data.customers:[];
     data.sales = Array.isArray(data.sales)?data.sales:[];
@@ -102,8 +155,13 @@ window.GuildStorage = (() => {
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
     set(keys.state,data);
-    await pullCloud();   // GASに正データがあれば取り込む
-    set(keys.state,data);
+    // GAS同期は裏で実行する。初期画面の「はい／いいえ」を待たせないため、ここでは待たない。
+    pullCloud().then(()=>{
+      ensureMenuCategories();
+      set(keys.state,data);
+      try{ if(window.GuildMenu && GuildMenu.renderCategoryButtons) GuildMenu.renderCategoryButtons(); }catch(e){}
+      try{ if(window.GuildUI && GuildUI.renderNotice) GuildUI.renderNotice(data.settings); }catch(e){}
+    }).catch(()=>{});
     return data;
   }
   // --- クラウド同期（GAS）---
@@ -127,7 +185,21 @@ window.GuildStorage = (() => {
       const res=await fetch(url+(url.includes('?')?'&':'?')+'action=sync&v='+Date.now(),{cache:'no-store'});
       const remote=await res.json(); if(!remote||typeof remote!=='object') return false;
       if(remote.settings && Object.keys(remote.settings).length){ data.settings=Object.assign({},data.settings,remote.settings); }
-      if(Array.isArray(remote.menu)&&remote.menu.length){ data.menu=remote.menu.map(normalizeMenu); }
+      if(Array.isArray(remote.menu)&&remote.menu.length){
+        const remoteMenu = remote.menu.map(normalizeMenu);
+        const localMenu = Array.isArray(data.menu) ? data.menu : [];
+        // GAS側がフードだけ等の不完全メニューなら取り込まず、現在の本番メニューをGASへ戻す
+        if(menuLooksComplete(localMenu) && !menuLooksComplete(remoteMenu)){
+          schedulePush();
+        } else if(!localMenu.length || (menuLooksComplete(remoteMenu) && remoteMenu.length >= localMenu.length)){
+          data.menu = remoteMenu;
+        } else if(remoteMenu.length > localMenu.length && !menuLooksComplete(localMenu)){
+          data.menu = remoteMenu;
+        } else {
+          schedulePush();
+        }
+        ensureMenuCategories();
+      }
       if(Array.isArray(remote.monsters)&&remote.monsters.length){
         const idx=data.currentEnemyIndex, curHp=(data.monsters[idx]||{}).hp;
         data.monsters=remote.monsters.map(normalizeMonster);

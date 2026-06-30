@@ -4,9 +4,17 @@ window.GuildMenu = (() => {
   const qtyMap = {};
   function init(d){ data=d; renderCategoryButtons(); }
   function categoryInfo(cat){ return (data.settings.categories||[]).find(c=>c.id===cat) || {id:cat,name:cat,icon:'🍽️'}; }
+  function effectiveCategories(){
+    const names={beer_sour:{name:'ビール・サワー',icon:'🍺'},shochu_cocktail:{name:'焼酎・カクテル',icon:'🍸'},shot_bottle:{name:'ショット・ボトル',icon:'🥂'},soft:{name:'ソフトドリンク',icon:'🥤'},food:{name:'フード',icon:'🍟'}};
+    const byId={};
+    (data.settings.categories||[]).forEach(c=>{ if(c&&c.id) byId[c.id]=c; });
+    (data.menu||[]).forEach(p=>{ const id=p.cat||p.category; if(id&&!byId[id]) byId[id]=Object.assign({id}, names[id]||{name:id,icon:p.emoji||p.icon||'🍽️'}); });
+    const order=['beer_sour','shochu_cocktail','shot_bottle','soft','food'];
+    return order.filter(id=>byId[id]).map(id=>byId[id]).concat(Object.keys(byId).filter(id=>!order.includes(id)).map(id=>byId[id]));
+  }
   function renderCategoryButtons(){
     const box=$('categoryButtons'); box.innerHTML='';
-    (data.settings.categories||[]).forEach(c=>{
+    effectiveCategories().forEach(c=>{
       const b=document.createElement('button'); b.className='btn'; b.textContent=`${c.icon||''} ${c.name}`;
       b.onclick=()=>openCategory(c.id); box.appendChild(b);
     });
