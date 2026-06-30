@@ -1,4 +1,4 @@
-window.GuildApp = {VERSION:'3.0-return-home'};
+window.GuildApp = {VERSION:'3.0-stable-direct'};
 (async function(){
   const {$}=GuildUtils;
   const data = await GuildStorage.init();
@@ -20,22 +20,6 @@ window.GuildApp = {VERSION:'3.0-return-home'};
   $('btnCancelCheckout').onclick=()=>GuildUI.closeModals();
   $('btnNoCheckout').onclick=()=>GuildUI.closeModals();
   $('btnDoCheckout').onclick=GuildOrder.checkoutDo;
-
-  // 一般画面から最初の選択画面へ戻るボタン。
-  // 管理者画面への入口は最初の画面だけに残す。
-  const checkoutBtn = $('btnCheckout');
-  if(checkoutBtn && !$('btnReturnWelcome')){
-    const backBtn = document.createElement('button');
-    backBtn.id = 'btnReturnWelcome';
-    backBtn.className = 'btn checkout-main';
-    backBtn.textContent = '🏠 最初の画面へ';
-    backBtn.onclick = () => {
-      GuildAudio.playSe('cancel');
-      GuildAudio.playBgm('title');
-      GuildUI.show('screenWelcome');
-    };
-    checkoutBtn.insertAdjacentElement('afterend', backBtn);
-  }
   GuildUI.show('screenWelcome');
   GuildAudio.playBgm('title');
 })();
