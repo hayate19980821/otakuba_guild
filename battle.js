@@ -3,7 +3,7 @@ window.GuildBattle = (() => {
   let data;
   function init(d){ data=d; }
   function enemy(){ if(!data) data=GuildStorage.getData(); const list=data.monsters||[]; const i=GuildUtils.clamp(data.currentEnemyIndex||0,0,Math.max(0,list.length-1)); data.currentEnemyIndex=i; return list[i]; }
-  function isFinalEnemy(e){ return !!e && (/maou/i.test(String(e.id||'')) || String(e.name||'').includes('魔王')); }
+  function isFinalEnemy(e){ if(!e) return false; const list=(data&&data.monsters)||GuildStorage.getData().monsters||[]; const idx=list.indexOf(e); return idx>=0 ? idx===list.length-1 : (list.length>0 && list[list.length-1] && list[list.length-1].id===e.id); }
   function bgmKey(e){ return (e&&e.bgm) || 'slime'; }
   function nextEnemy(){ const list=data.monsters||[]; if((data.currentEnemyIndex||0) < list.length-1) data.currentEnemyIndex++; const e=enemy(); if(e && Number(e.hp)<=0) e.hp=e.maxHp; GuildStorage.save(); render(); }
   let suppressBgm=false;
