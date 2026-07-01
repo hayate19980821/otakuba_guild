@@ -212,7 +212,7 @@
     $('adminContent').innerHTML=`<h2>🖼️ 画像 / 音源アップロード</h2>
     <div class="admin-card"><div class="tiny">敵画像・背景・BGM・メニュー写真をここからアップできます。アップ後に出るURLを、各編集画面の「画像」欄や「BGM」欄に貼れば使えます。</div></div>
     <div class="admin-card">
-      <label>ファイルを選択<input id="upFile" type="file" accept="image/*,audio/*"></label>
+      <label>ファイルを選択<input id="upFile" type="file"></label>
       <label>用途メモ（任意・ファイル名に使います）<input id="upLabel" placeholder="例：slime2 / bgm_boss / menu_beer"></label>
       <div class="toolbar"><button class="btn gold" id="upBtn">アップロード</button></div>
       <div id="upProgress" class="tiny"></div>
