@@ -154,10 +154,31 @@ window.GuildStorage = (() => {
     if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
     data.currentEnemyIndex = GuildUtils.clamp(data.currentEnemyIndex,0,Math.max(0,data.monsters.length-1));
     data.partyCount = Math.max(1, Math.min(20, Number(data.partyCount || 1) || 1));
+    // 音源の紐付けを保証：保存済み設定に無いBGM/SEキーを、正しいファイル名で補完
+    // （古い設定がクラウド/localStorageに残っていても、daimaou等が必ず登録される）
+    data.settings.audioFiles = data.settings.audioFiles || {};
+    data.settings.audioFiles.bgm = Object.assign({
+      title:'title.mp3', slime:'slime.mp3', goblin:'goblin.mp3', orc:'orc.mp3',
+      cave:'cave.mp3', ruins:'ruins.mp3', maou:'maou.mp3', daimaou:'daimaou.mp3',
+      ending:'March_for__delightful_future.mp3'
+    }, data.settings.audioFiles.bgm || {});
+    // daimaouは特に、古い未登録状態を確実に上書きする
+    if(!data.settings.audioFiles.bgm.daimaou) data.settings.audioFiles.bgm.daimaou='daimaou.mp3';
+    data.settings.audioFiles.se = Object.assign({
+      ok:'ok.mp3', cancel:'cancel.mp3', add:'add.mp3', damage:'damage.mp3',
+      defeat:'defeat.mp3', victory:'victory.mp3', levelup:'levelup.mp3'
+    }, data.settings.audioFiles.se || {});
     set(keys.state,data);
-    // GAS同期は裏で実行する。初期画面の「はい／いいえ」を待たせないため、ここでは待たない。
     pullCloud().then(()=>{
       ensureMenuCategories();
+      // クラウドの古い設定で上書きされても、必須BGM(特にdaimaou)を再補完
+      data.settings.audioFiles = data.settings.audioFiles || {};
+      data.settings.audioFiles.bgm = Object.assign({
+        title:'title.mp3', slime:'slime.mp3', goblin:'goblin.mp3', orc:'orc.mp3',
+        cave:'cave.mp3', ruins:'ruins.mp3', maou:'maou.mp3', daimaou:'daimaou.mp3',
+        ending:'March_for__delightful_future.mp3'
+      }, data.settings.audioFiles.bgm || {});
+      if(!data.settings.audioFiles.bgm.daimaou) data.settings.audioFiles.bgm.daimaou='daimaou.mp3';
       set(keys.state,data);
       try{ if(window.GuildMenu && GuildMenu.renderCategoryButtons) GuildMenu.renderCategoryButtons(); }catch(e){}
       try{ if(window.GuildUI && GuildUI.renderNotice) GuildUI.renderNotice(data.settings); }catch(e){}
