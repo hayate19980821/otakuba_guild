@@ -1,6 +1,6 @@
 window.GuildAudio = (() => {
   let settings = {}; let bgmAudio = null; let currentKey = ''; let enabled = true;
-  let endingAudio = null;
+  let endingAudio = null; let endingLock = false;
   function init(s){ settings = s || {}; preloadEnding(); }
   function preloadEnding(){
     try{ const src=path('bgm','ending'); if(src){ endingAudio=new Audio(src); endingAudio.loop=true; endingAudio.preload='auto'; endingAudio.load(); } }catch(e){}
@@ -8,6 +8,7 @@ window.GuildAudio = (() => {
   // 魔王討伐ファンファーレ専用：事前ロード済みAudioを鳴らす（iOS制約回避）
   function playEnding(){
     if(!enabled) return;
+    endingLock = true;              // これ以降、他のBGMに邪魔されない
     stopBgm(); currentKey='ending';
     if(!endingAudio){ preloadEnding(); }
     const a = endingAudio || new Audio(path('bgm','ending'));
@@ -15,6 +16,7 @@ window.GuildAudio = (() => {
     const tryPlay=(n)=>{ const p=a.play(); if(p&&p.catch) p.catch(()=>{ if(n>0) setTimeout(()=>tryPlay(n-1),350); }); };
     tryPlay(4); bgmAudio=a;
   }
+  function releaseEnding(){ endingLock=false; }
   function volume(type){ return Number(settings[type === 'bgm' ? 'bgmVolume' : 'seVolume'] ?? (type==='bgm'?0.45:0.9)); }
   function path(type, key){
     if(!key) return '';
@@ -28,6 +30,7 @@ window.GuildAudio = (() => {
   function stopBgm(){ if(bgmAudio){ try{ bgmAudio.pause(); bgmAudio.currentTime=0; }catch(e){} } bgmAudio=null; currentKey=''; }
   function playBgm(key){
     if(!enabled || !key) return;
+    if(endingLock && key!=='ending') return;   // ファンファーレ中は他BGMを無視
     if(currentKey === key && bgmAudio && !bgmAudio.paused) return;
     const src = path('bgm', key); if(!src) return;
     stopBgm(); currentKey = key;
@@ -49,5 +52,5 @@ window.GuildAudio = (() => {
   }
   function play(key){ const map={ok:'ok',bad:'bad',cancel:'cancel',add:'add',confirm:'confirm',hit:'damage',damage:'damage',defeat:'defeat',levelup:'levelup',victory:'victory'}; playSe(map[key]||key); }
   function mute(flag){ enabled = !flag; if(flag) stopBgm(); }
-  return {init, playBgm, stopBgm, playSe, play, mute, playEnding};
+  return {init, playBgm, stopBgm, playSe, play, mute, playEnding, releaseEnding};
 })();

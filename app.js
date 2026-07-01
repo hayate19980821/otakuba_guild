@@ -15,6 +15,7 @@ window.GuildApp = {VERSION:'4.0'};
   GuildApp.showVictoryClear=function(){ const o=$('victoryClearOverlay'); if(o) o.classList.add('show'); };
   if($('victoryClearClose')) $('victoryClearClose').onclick=()=>{
     const o=$('victoryClearOverlay'); if(o) o.classList.remove('show');
+    if(GuildAudio.releaseEnding) GuildAudio.releaseEnding();
     GuildAudio.stopBgm();
     if(GuildStorage.resetProgress) GuildStorage.resetProgress({sync:true});
     GuildUI.show('screenMain');
