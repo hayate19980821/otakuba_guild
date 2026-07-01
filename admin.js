@@ -162,7 +162,7 @@
   // ===== 討伐（モンスター）ボタン編集 =====
   var BG_LIST=['grass.png','forest.png','cave.png','mountain.png','ruins.png','volcano.png','castle.png'];
   var IMG_LIST=['slime.png','goblin.png','orc.png','skeleton.png','gargoyle.png','minotaur.png','mimic.png','dragon.png','dark_wizard.png','maou.png'];
-  var BGM_LIST=['title','slime','goblin','orc','cave','ruins','maou','ending'];
+  var BGM_LIST=['title','slime','goblin','orc','cave','ruins','maou','daimaou','ending'];
   function normalizeMonster(m,i){m=m||{};var hpMax=Number(m.maxHp||m.hp||500)||500;m.id=m.id||GuildUtils.uid('enemy');m.name=m.name||('敵'+(i+1));m.stage=m.stage||'草原';m.maxHp=hpMax;m.hp=Number.isFinite(Number(m.hp))?Number(m.hp):hpMax;m.bg=m.bg||m.background||'grass.png';m.background=m.bg;m.image=m.image||'slime.png';m.bgm=m.bgm||'slime';m.sort=Number(m.sort||i);return m;}
   function optList(arr,sel){return arr.map(function(v){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(v)+'</option>';}).join('');}
   function monsterCard(m,i){var thumb=m.image?('<img src="'+esc(m.image)+'" alt="" style="width:48px;height:48px;object-fit:contain;vertical-align:middle;margin-right:8px" onerror="this.style.display=\'none\'">'):'';return '<div class="admin-card" data-monster-index="'+i+'"><div class="admin-card-title">'+thumb+(i+1)+'. '+esc(m.name)+'<br><span style="font-size:.8em;opacity:.7">'+esc(m.stage)+' / HP '+(m.hp||0)+'/'+(m.maxHp||0)+'</span></div>'+
@@ -189,7 +189,7 @@
   function updatePreview(card){var img=card.querySelector('[data-preview-img]');var box=card.querySelector('[data-preview]');if(!img||!box)return;var sc=(+card.querySelector('[data-field=scale]').value||100)/100;var ox=+card.querySelector('[data-field=offsetX]').value||0;var oy=+card.querySelector('[data-field=offsetY]').value||0;var imgSrc=card.querySelector('[data-field=image]').value;var bgSrc=card.querySelector('[data-field=bg]').value;img.src=imgSrc;img.style.display='';box.style.backgroundImage='url('+bgSrc+')';img.style.transform='translate(calc(-50% + '+ox+'%),calc(-50% + '+oy+'%)) scale('+sc+')';var sv=card.querySelector('[data-scale-val]');if(sv)sv.textContent=+card.querySelector('[data-field=scale]').value||100;var oxv=card.querySelector('[data-ox-val]');if(oxv)oxv.textContent=ox;var oyv=card.querySelector('[data-oy-val]');if(oyv)oyv.textContent=oy;}
   function bindMonsterEvents(){
     document.querySelectorAll('[data-monster-index]').forEach(function(card){['scale','offsetX','offsetY'].forEach(function(f){var el=card.querySelector('[data-field='+f+']');if(el)el.addEventListener('input',function(){updatePreview(card);});});var imgSel=card.querySelector('[data-field=image]');if(imgSel)imgSel.addEventListener('change',function(){updatePreview(card);});var bgSel=card.querySelector('[data-field=bg]');if(bgSel)bgSel.addEventListener('change',function(){updatePreview(card);});});
-    document.querySelectorAll('[data-save-monster]').forEach(function(b){b.onclick=function(){var card=b.closest('[data-monster-index]');readMonsterCard(card);save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();renderMonsters();};});
+    document.querySelectorAll('[data-save-monster]').forEach(function(b){b.onclick=function(){var card=b.closest('[data-monster-index]');readMonsterCard(card);save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();toast('保存しました');var orig=b.textContent;b.textContent='✓ 保存しました';b.classList.add('green');setTimeout(function(){b.textContent=orig;b.classList.remove('green');},1400);};});
     document.querySelectorAll('[data-current-monster]').forEach(function(b){b.onclick=function(){saveMonsterForm();data.currentEnemyIndex=+b.dataset.currentMonster;save();toast('現在の敵にしました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};});
     document.querySelectorAll('[data-dup-monster]').forEach(function(b){b.onclick=function(){saveMonsterForm();var src=data.monsters[+b.dataset.dupMonster];var copy=JSON.parse(JSON.stringify(src));copy.id=GuildUtils.uid('enemy');copy.name=src.name+'（複製）';data.monsters.splice(+b.dataset.dupMonster+1,0,copy);save();renderMonsters();};});
     document.querySelectorAll('[data-del-monster]').forEach(function(b){b.onclick=function(){if(confirm('削除しますか？')){saveMonsterForm();data.monsters.splice(+b.dataset.delMonster,1);save();renderMonsters();}};});}
@@ -326,12 +326,54 @@
     customerQuery='';salesQuery='';
     pushAfterReset('運用データをまとめて初期化しました');
   }
+  function doBackupExport(){
+    try{
+      const payload={ _type:'otakuba_guild_backup', _version:'4.0', _exportedAt:new Date().toISOString(), data:data };
+      const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+      const url=URL.createObjectURL(blob);
+      const a=document.createElement('a');
+      const d=new Date(); const stamp=d.getFullYear()+('0'+(d.getMonth()+1)).slice(-2)+('0'+d.getDate()).slice(-2)+'_'+('0'+d.getHours()).slice(-2)+('0'+d.getMinutes()).slice(-2);
+      a.href=url; a.download='otakuba_backup_'+stamp+'.json'; document.body.appendChild(a); a.click(); document.body.removeChild(a);
+      setTimeout(()=>URL.revokeObjectURL(url),1000);
+      const m=$('backupMsg'); if(m) m.textContent='✅ バックアップを保存しました（ダウンロード先を確認してください）';
+      toast('バックアップを保存しました');
+    }catch(e){ const m=$('backupMsg'); if(m) m.textContent='❌ 保存に失敗しました: '+e; }
+  }
+  function doBackupImport(ev){
+    const f=ev.target.files&&ev.target.files[0]; if(!f) return;
+    const r=new FileReader();
+    r.onload=()=>{
+      try{
+        const parsed=JSON.parse(r.result);
+        const incoming=(parsed&&parsed.data)?parsed.data:parsed;
+        if(!incoming||typeof incoming!=='object'||(!incoming.menu&&!incoming.monsters&&!incoming.settings)){ toast('このファイルはバックアップとして読めません'); return; }
+        const cnt=`メニュー${(incoming.menu||[]).length}件 / 敵${(incoming.monsters||[]).length}件 / 顧客${(incoming.customers||[]).length}件 / 売上${(incoming.sales||[]).length}件`;
+        if(!confirm('現在のデータを、このバックアップで置き換えます。\n\n'+cnt+'\n\n※今のデータは上書きされます。よろしいですか？')){ ev.target.value=''; return; }
+        Object.keys(incoming).forEach(k=>{ data[k]=incoming[k]; });
+        save(); if(GuildStorage.pushCloud)GuildStorage.pushCloud();
+        const m=$('backupMsg'); if(m) m.textContent='✅ 復元しました（'+cnt+'）';
+        toast('復元しました');
+        render();
+      }catch(e){ toast('復元に失敗しました: '+e); }
+      ev.target.value='';
+    };
+    r.readAsText(f);
+  }
   function renderReset(){
     const ss=salesSettings();
     const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);
     const orderCount=(data.sales||[]).length;
     const monthTotal=sumSales(monthList);
     $('adminContent').innerHTML=`<h2>🧹 個別初期化</h2>
+      <div class="admin-card" style="border-color:var(--gold)">
+        <div class="admin-card-title">💾 バックアップ / 復元</div>
+        <p class="tiny">全データ（メニュー・敵・顧客・売上・設定・営業記録）をファイルに保存できます。初期化やスマホ変更の前に取っておくと安心です。</p>
+        <div class="toolbar">
+          <button class="btn gold" id="backupExport">バックアップを保存</button>
+          <label class="btn green" style="cursor:pointer">復元（ファイル選択）<input id="backupImport" type="file" accept="application/json,.json" style="display:none"></label>
+        </div>
+        <div id="backupMsg" class="tiny"></div>
+      </div>
       <div class="billbox">必要なものだけ初期化できます。メニューや敵データは、押した項目以外は残ります。</div>
       <div class="grid">
         <div class="admin-card"><div class="admin-card-title">討伐進行</div><p class="tiny">現在の敵・HP・注文中データをリセット</p><button class="btn red" id="resetProgress">討伐進行を初期化</button></div>
@@ -343,6 +385,8 @@
         <div class="admin-card"><div class="admin-card-title">本日のお知らせ</div><p class="tiny">タイトル・本文・表示位置を初期状態へ戻します</p><button class="btn red" id="resetNotice">お知らせを初期化</button></div>
         <div class="admin-card"><div class="admin-card-title">在庫・状態</div><p class="tiny">在庫数・売切れ・おすすめ・限定を初期化</p><button class="btn red" id="resetInventory">在庫を初期化</button></div><div class="admin-card"><div class="admin-card-title">日報・営業</div><p class="tiny">営業状態と保存済み日報を初期化</p><button class="btn red" id="resetDailyReports">日報を初期化</button></div><div class="admin-card"><div class="admin-card-title">運用データ一括</div><p class="tiny">メニュー・敵・設定・GAS URLは残して、履歴/売上/顧客/進行を初期化</p><button class="btn red" id="resetAllLocal">運用データをまとめて初期化</button></div>
       </div>`;
+    $('backupExport').onclick=doBackupExport;
+    $('backupImport').onchange=doBackupImport;
     $('resetProgress').onclick=()=>{if(confirmReset('討伐進行','現在の敵を最初に戻し、敵HPと注文中データを初期化します。')){GuildStorage.resetProgress();toast('討伐進行を初期化しました');renderReset();}};
     $('resetActiveBill').onclick=resetActiveBill;
     $('resetOrderHistory').onclick=resetOrderHistory;
