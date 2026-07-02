@@ -230,6 +230,14 @@
           "masterDefault": "ようこそステーションへ。何を注文する？",
           "checkoutDone": "また会おう。ミッション完了（会計）を送信しました",
           "peace": "宇宙海賊王を撃墜し、銀河に平和が戻った。"
+        },
+        "assets": {
+          "startBg": "start.png",
+          "startBgm": "title",
+          "victoryBg": "clear.png",
+          "victoryImage": "",
+          "victoryBgm": "ending",
+          "masterImage": "pirate.png"
         }
       },
       "enemies": [
@@ -411,6 +419,14 @@
           "masterDefault": "ふむ、何を注文するのかね？",
           "checkoutDone": "お疲れ様。課題クリア（会計）を送信しました",
           "peace": "闇の魔導師を撃退し、学院に平和が戻った。"
+        },
+        "assets": {
+          "startBg": "start.png",
+          "startBgm": "title",
+          "victoryBg": "clear.png",
+          "victoryImage": "",
+          "victoryBgm": "ending",
+          "masterImage": "master.png"
         }
       },
       "enemies": [

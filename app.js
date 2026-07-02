@@ -14,7 +14,18 @@ window.GuildApp = {VERSION:'4.0'};
     const title=document.querySelector('#screenWelcome .title-logo');
     if(title) title.innerHTML=c.startTitle || startTitleDefault();
     welcomeText(c.startSubtitle || startSubtitleDefault());
-    if(c.startBg && window.GuildUI && GuildUI.applyBg) GuildUI.applyBg(assetUrl(c.startBg));
+    const bg=assetUrl(c.startBg||'');
+    if(bg && window.GuildUI && GuildUI.applyBg) GuildUI.applyBg(bg);
+    const sw=document.getElementById('screenWelcome');
+    if(sw){
+      if(bg){
+        sw.style.backgroundImage=`linear-gradient(to bottom,rgba(0,0,0,.18),rgba(0,0,0,.70)),url("${bg}")`;
+        sw.style.backgroundSize='cover';
+        sw.style.backgroundPosition='center';
+      }else{
+        sw.style.backgroundImage='';
+      }
+    }
   }
   function hasActiveSession(){
     const bill=Array.isArray(data.activeBill)?data.activeBill:[];
@@ -38,8 +49,18 @@ window.GuildApp = {VERSION:'4.0'};
   function resumeBattle(){
     GuildAudio.stopBgm();
     GuildUI.show('screenMain');
+    applyBattleThemeBg();
     GuildBattle.render();
   }
+  function applyBattleThemeBg(){
+    try{
+      const enemies=data.monsters||[];
+      const idx=Number(data.currentEnemyIndex||0);
+      const m=enemies[idx]||enemies[0];
+      if(m&&m.bg&&window.GuildUI&&GuildUI.applyBg) GuildUI.applyBg(m.bg);
+    }catch(e){}
+  }
+  
   function applyVictoryTheme(){
     const c=themeCustom();
     const o=$('victoryClearOverlay');
@@ -257,6 +278,7 @@ window.GuildApp = {VERSION:'4.0'};
     GuildAudio.stopBgm();
     if(GuildStorage.resetProgress) GuildStorage.resetProgress({sync:true});
     GuildUI.show('screenMain');
+    applyBattleThemeBg();
     GuildBattle.render();
   };
   $('levelUpClose').onclick=()=>$('levelUpOverlay').classList.remove('show');
@@ -277,7 +299,7 @@ window.GuildApp = {VERSION:'4.0'};
   $('btnPartyOk').onclick=()=>{ GuildAudio.playSe('ok'); showChargeConfirm(); };
   $('btnCancelCharge').onclick=()=>GuildUI.closeModals();
   $('btnNoCharge').onclick=()=>{ GuildAudio.playSe('cancel'); GuildUI.closeModals(); showWelcomeScreen(); };
-  $('btnDoCharge').onclick=()=>{ GuildAudio.playSe('ok'); applyCoverCharge(); GuildUI.closeModals(); GuildUI.renderNotice(data.settings); GuildUI.show('screenMain'); GuildBattle.render(); };
+  $('btnDoCharge').onclick=()=>{ GuildAudio.playSe('ok'); applyCoverCharge(); GuildUI.closeModals(); GuildUI.renderNotice(data.settings); GuildUI.show('screenMain'); applyBattleThemeBg(); GuildBattle.render(); };
   $('btnBackTitle').onclick=()=>{ GuildAudio.playSe('cancel'); GuildUI.closeModals(); welcomeText('メニューを開きますか？'); showWelcomeScreen(); };
   $('btnCloseMenu').onclick=()=>GuildUI.closeModals(); $('btnCancelOrder').onclick=GuildOrder.cancelPending; $('btnNoOrder').onclick=GuildOrder.cancelPending; $('btnDoOrder').onclick=GuildOrder.confirmOrder; $('btnCheckout').onclick=GuildOrder.checkoutAsk; $('btnCancelCheckout').onclick=()=>GuildUI.closeModals(); $('btnNoCheckout').onclick=()=>GuildUI.closeModals(); $('btnDoCheckout').onclick=GuildOrder.checkoutDo;
   showWelcomeScreen();

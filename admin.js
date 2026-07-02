@@ -161,8 +161,16 @@
   function textareaEditor(key,label){$('adminContent').innerHTML=`<h2>${label}</h2><textarea class="json-box" id="jsonEdit">${esc(JSON.stringify(data[key],null,2))}</textarea><div class="toolbar"><button class="btn gold" id="saveJson">保存</button><button class="btn" id="formatJson">整形</button></div>`;$('saveJson').onclick=()=>{try{data[key]=JSON.parse($('jsonEdit').value);save();toast('保存しました');render()}catch(e){toast('JSONエラー')}};$('formatJson').onclick=()=>{try{$('jsonEdit').value=JSON.stringify(JSON.parse($('jsonEdit').value),null,2)}catch(e){toast('JSONエラー')}}}
 
   // ===== 討伐（モンスター）ボタン編集 =====
-  var BG_LIST=['grass.png','forest.png','cave.png','mountain.png','ruins.png','volcano.png','castle.png'];
-  var IMG_LIST=['slime.png','goblin.png','orc.png','skeleton.png','gargoyle.png','minotaur.png','mimic.png','dragon.png','dark_wizard.png','maou.png','maou_new.png'];
+  var BG_LIST=[
+    'grass.png','forest.png','cave.png','mountain.png','ruins.png','volcano.png','castle.png',
+    'presets/space/start.png','presets/space/clear.png','presets/space/bg_orbit.png','presets/space/bg_belt.png','presets/space/bg_colony.png','presets/space/bg_fortress.png','presets/space/bg_star.png','presets/space/bg_mothership.png',
+    'presets/magic/start.png','presets/magic/clear.png','presets/magic/bg_yard.png','presets/magic/bg_greenhouse.png','presets/magic/bg_library.png','presets/magic/bg_vault.png','presets/magic/bg_ritual.png','presets/magic/bg_tower.png'
+  ];
+  var IMG_LIST=[
+    'slime.png','goblin.png','orc.png','skeleton.png','gargoyle.png','minotaur.png','mimic.png','dragon.png','dark_wizard.png','maou.png','maou_new.png',
+    'presets/space/drone.png','presets/space/fighter.png','presets/space/gunship.png','presets/space/alien.png','presets/space/mine.png','presets/space/robot.png','presets/space/satellite.png','presets/space/kaiju.png','presets/space/pirate.png','presets/space/pirate_king.png','presets/space/mech_suit.png','presets/space/ancient_sentinel.png','presets/space/cyborg_assassin.png','presets/space/swarm_mind_unit.png','presets/space/rogue_ai_core.png','presets/space/space_wraith.png',
+    'presets/magic/familiar.png','presets/magic/fairy.png','presets/magic/armor.png','presets/magic/ghost.png','presets/magic/cursed_chest.png','presets/magic/golem.png','presets/magic/servant.png','presets/magic/summoned_dragon.png','presets/magic/fallen_teacher.png','presets/magic/dark_mage.png','presets/magic/master.png'
+  ];
   var BGM_LIST=['title','slime','goblin','orc','cave','ruins','maou','daimaou','ending'];
   function normalizeMonster(m,i){m=m||{};var hpMax=Number(m.maxHp||m.hp||500)||500;m.id=m.id||GuildUtils.uid('enemy');m.name=m.name||('敵'+(i+1));m.stage=m.stage||'草原';m.maxHp=hpMax;m.hp=Number.isFinite(Number(m.hp))?Number(m.hp):hpMax;m.bg=m.bg||m.background||'grass.png';m.background=m.bg;m.image=m.image||'slime.png';m.bgm=m.bgm||'slime';m.sort=Number(m.sort||i);return m;}
   function optList(arr,sel){return arr.map(function(v){return '<option value="'+esc(v)+'"'+(v===sel?' selected':'')+'>'+esc(v)+'</option>';}).join('');}
