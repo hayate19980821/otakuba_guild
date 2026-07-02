@@ -228,7 +228,7 @@
     '<label class="check-row"><input id="setNotify" type="checkbox" '+(s.notifyOn!==false?'checked':'')+'>通知ON</label>'+
     '<label>GAS URL<input id="setGas" value="'+esc(s.gasUrl||'')+'" placeholder="https://script.google.com/.../exec"></label>'+
     '<label>Discord通知URL（この店の通知先）<input id="setHook" value="'+esc(s.discordWebhookUrl||'')+'" placeholder="https://discord.com/api/webhooks/..."></label>'+
-    '<div class="tiny">Discordのチャンネル設定→連携サービス→ウェブフックで作ったURLを貼ると、注文/会計の通知がその店のDiscordに届きます。空欄ならGAS側の設定が使われます。</div>'+
+    '<div class="tiny">Discordのチャンネル設定→連携サービス→ウェブフックで作ったURLを貼ると、注文/会計の通知がその店のDiscordに届きます。空欄ならGAS側の設定が使われます。</div>'+'<button class="btn" id="resetSetupWizard">初回セットアップを再表示</button>'+
     '</div><div class="admin-card notice-admin"><div class="admin-card-title">📢 本日のお知らせ</div>'+
     '<label class="check-row"><input id="noticeEnabled" type="checkbox" '+(s.notice.enabled!==false?'checked':'')+'>一般画面に表示する</label>'+
     '<label>見出し<input id="noticeTitle" value="'+esc(s.notice.title||'本日のお知らせ')+'"></label>'+
@@ -236,7 +236,7 @@
     '<label>表示位置<select id="noticePosition"><option value="top" '+(s.notice.position!=='bottom'?'selected':'')+'>上に表示</option><option value="bottom" '+(s.notice.position==='bottom'?'selected':'')+'>下に表示</option></select></label>'+ 
     '</div><div class="toolbar"><button class="btn green" id="saveSettings">保存</button><button class="btn" id="jsonSettings">詳細JSON</button></div>';
     $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.discordWebhookUrl=$('setHook').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
-    $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};}
+    $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};if($('resetSetupWizard'))$('resetSetupWizard').onclick=function(){s.setupDone=false;save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();toast('次回、初回セットアップを表示します');};}
   function renderConcept(){
     const s=data.settings;
     s.themeCustom=Object.assign({
@@ -249,6 +249,7 @@
       victoryTitle:'',
       victorySubtitle:'',
       victoryBgm:'ending',
+      masterName:'ギルドマスター',
       masterImage:'master_no.jpeg',
       masterMessage:'冷やかしか？さっさとメニューを開け'
     },s.themeCustom||{});
@@ -268,7 +269,7 @@
       '<label>追加メッセージ<textarea id="tcVictorySubtitle" placeholder="例：ご来店ありがとうございました">'+esc(c.victorySubtitle||'')+'</textarea></label>'+
       '<label>BGMキー / URL<input id="tcVictoryBgm" value="'+esc(c.victoryBgm||'ending')+'" placeholder="例：ending / https://...mp3"></label>'+
       '</div>'+
-      '<div class="admin-card"><div class="admin-card-title">🧙 いいえ選択時のマスター</div>'+
+      '<div class="admin-card"><div class="admin-card-title">🧙 いいえ選択時のマスター</div>'+'<label>表示名<input id="tcMasterName" value="'+esc(c.masterName||'ギルドマスター')+'" placeholder="例：ギルドマスター / 店長 / 校長"></label>'+
       '<label>マスター画像URL / ファイル名<input id="tcMasterImage" value="'+esc(c.masterImage||'master_no.jpeg')+'" placeholder="例：master_no.jpeg / https://..."></label>'+
       '<label>セリフ<input id="tcMasterMessage" value="'+esc(c.masterMessage||'冷やかしか？さっさとメニューを開け')+'"></label>'+
       '</div>'+
@@ -288,6 +289,7 @@
         victoryTitle:$('tcVictoryTitle').value.trim(),
         victorySubtitle:$('tcVictorySubtitle').value,
         victoryBgm:$('tcVictoryBgm').value.trim()||'ending',
+        masterName:$('tcMasterName').value.trim()||'ギルドマスター',
         masterImage:$('tcMasterImage').value.trim()||'master_no.jpeg',
         masterMessage:$('tcMasterMessage').value.trim()||'冷やかしか？さっさとメニューを開け'
       };

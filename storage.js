@@ -110,7 +110,7 @@ window.GuildStorage = (() => {
       currentCustomer:'', activeBill:[], currentEnemyIndex:0, partyCount:1
     };
     defaults.settings = Object.assign({
-      currency:'G', coverCharge:500, levelStep:3000, adminPassword:'OTAKU', notifyOn:true, gasUrl:'', discordWebhookUrl:'', storeId:'',
+      currency:'G', coverCharge:500, levelStep:3000, adminPassword:'OTAKU', notifyOn:true, setupDone:false, gasUrl:'', discordWebhookUrl:'', storeId:'',
       categories:[
         {id:'beer_sour', name:'ビール・サワー', icon:'🍺'}, {id:'shochu_cocktail', name:'焼酎・カクテル', icon:'🍸'},
         {id:'shot_bottle', name:'ショット・ボトル', icon:'🥂'}, {id:'soft', name:'ソフトドリンク', icon:'🥤'},
@@ -288,5 +288,32 @@ window.GuildStorage = (() => {
     return qrBaseUrl() + '?gas=' + encodeURIComponent(gasUrl||'');
   }
 
-return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud, markSaleDeleted, qrUrlForStore, qrUrlForGas};
+
+  function needsInitialSetup(){
+    try{
+      const q=new URLSearchParams(location.search||'');
+      // 店舗QRで入った場合はGAS/storeを優先するので初回セットアップは出さない
+      if(q.get('store')||q.get('s')||q.get('gas')||q.get('gasUrl')) return false;
+    }catch(e){}
+    const s=data.settings||{};
+    return !s.setupDone && !s.gasUrl;
+  }
+  function completeInitialSetup(values){
+    values=values||{};
+    data.settings=data.settings||{};
+    if(values.storeName){
+      data.settings.storeName=values.storeName;
+      data.settings.shopName=values.storeName;
+    }
+    if(values.storeId) data.settings.storeId=values.storeId;
+    if(values.gasUrl) data.settings.gasUrl=values.gasUrl;
+    if(values.discordWebhookUrl) data.settings.discordWebhookUrl=values.discordWebhookUrl;
+    data.settings.themeCustom=Object.assign({}, data.settings.themeCustom||{}, values.themeCustom||{});
+    data.settings.setupDone=true;
+    save();
+    pushCloud();
+    return data;
+  }
+
+return {keys, init, save, getData, replace, resetProgress, pullCloud, pushCloud, markSaleDeleted, qrUrlForStore, qrUrlForGas, needsInitialSetup, completeInitialSetup};
 })();

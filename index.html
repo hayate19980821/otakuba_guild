@@ -5,10 +5,20 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#050505">
   <title data-theme-title>おたく場ギルド</title>
-  <link rel="stylesheet" href="main.css?v=5.5-theme-editor">
-  <link rel="stylesheet" href="battle.css?v=5.5-theme-editor">
-  <link rel="stylesheet" href="menu.css?v=5.5-theme-editor">
-  <link rel="stylesheet" href="effects.css?v=5.5-theme-editor">
+  <link rel="stylesheet" href="main.css?v=5.6-setup-wizard">
+  <link rel="stylesheet" href="battle.css?v=5.6-setup-wizard">
+  <link rel="stylesheet" href="menu.css?v=5.6-setup-wizard">
+  <link rel="stylesheet" href="effects.css?v=5.6-setup-wizard">
+
+  <style>
+    .setup-wizard-overlay{z-index:10050}
+    .setup-wizard-card{max-width:94vw;width:460px;max-height:90dvh;overflow:auto;text-align:left}
+    .setup-step{border:1px solid rgba(255,246,223,.25);border-radius:10px;padding:10px;margin:10px 0;background:rgba(0,0,0,.22)}
+    .setup-step label{display:grid;gap:4px;margin:8px 0;font-size:12px;color:var(--gold)}
+    .setup-step input,.setup-step textarea,.setup-step select{width:100%}
+    .setup-step textarea{min-height:62px}
+  </style>
+
 </head>
 <body>
   <div class="app">
@@ -181,18 +191,73 @@
       </div>
       <button class="btn" id="victoryClearClose">⚔️ 最初の戦闘に戻る</button>
     </div>
-  </div>
+  
+    <div id="setupWizardOverlay" class="level-up-overlay setup-wizard-overlay">
+      <div class="panel window setup-wizard-card">
+        <div class="title-logo small">初回セットアップ</div>
+        <p class="tiny">店舗用の基本設定です。あとから管理画面 → Game設定で変更できます。</p>
 
-  <script src="theme.js?v=5.5-theme-editor"></script>
-  <script src="utils.js?v=5.5-theme-editor"></script>
-  <script src="storage.js?v=5.5-theme-editor"></script>
-  <script src="audio.js?v=5.5-theme-editor"></script>
-  <script src="ui.js?v=5.5-theme-editor"></script>
-  <script src="customer.js?v=5.5-theme-editor"></script>
-  <script src="battle.js?v=5.5-theme-editor"></script>
-  <script src="discord.js?v=5.5-theme-editor"></script>
-  <script src="menu.js?v=5.5-theme-editor"></script>
-  <script src="order.js?v=5.5-theme-editor"></script>
-  <script src="app.js?v=5.5-theme-editor"></script>
+        <div class="setup-step">
+          <div class="admin-card-title">① 店舗</div>
+          <label>店舗名<input id="setupStoreName" placeholder="例：おたく場ギルド"></label>
+          <label>テーマ<select id="setupTheme">
+            <option value="">現在のまま</option>
+            <option value="rpg">⚔️ RPG</option>
+            <option value="sf">🚀 SF</option>
+            <option value="magic_school">🪄 魔法学校</option>
+          </select></label>
+        </div>
+
+        <div class="setup-step">
+          <div class="admin-card-title">② スタート画面</div>
+          <label>タイトルHTML<textarea id="setupStartTitle" placeholder="例：おたく場ギルドへ&lt;br&gt;ようこそ"></textarea></label>
+          <label>メッセージ<input id="setupStartSubtitle" placeholder="例：メニューを開きますか？"></label>
+          <label>背景画像URL / ファイル名<input id="setupStartBg" placeholder="例：start_bg.png / https://..."></label>
+          <label>BGMキー / URL<input id="setupStartBgm" placeholder="例：title"></label>
+        </div>
+
+        <div class="setup-step">
+          <div class="admin-card-title">③ 「いいえ」を押した時</div>
+          <label>表示名<input id="setupMasterName" placeholder="例：ギルドマスター / 店長 / 校長"></label>
+          <label>画像URL / ファイル名<input id="setupMasterImage" placeholder="例：master_no.jpeg / https://..."></label>
+          <label>セリフ<input id="setupMasterMessage" placeholder="例：冷やかしか？さっさとメニューを開け"></label>
+        </div>
+
+        <div class="setup-step">
+          <div class="admin-card-title">④ 討伐完了画面</div>
+          <label>背景画像URL / ファイル名<input id="setupVictoryBg" placeholder="例：victory_bg.png / https://..."></label>
+          <label>中央画像URL / ファイル名<input id="setupVictoryImage" placeholder="例：victory_clear.PNG"></label>
+          <label>タイトル<input id="setupVictoryTitle" placeholder="例：討伐完了"></label>
+          <label>メッセージ<textarea id="setupVictorySubtitle" placeholder="例：ご来店ありがとうございました"></textarea></label>
+          <label>BGMキー / URL<input id="setupVictoryBgm" placeholder="例：ending"></label>
+        </div>
+
+        <div class="setup-step">
+          <div class="admin-card-title">⑤ 同期・通知</div>
+          <label>店舗ID（QR用）<input id="setupStoreId" placeholder="例：otakuba"></label>
+          <label>GAS URL<input id="setupGasUrl" placeholder="https://script.google.com/macros/s/.../exec"></label>
+          <label>Discord通知URL（任意）<input id="setupDiscordUrl" placeholder="https://discord.com/api/webhooks/..."></label>
+        </div>
+
+        <div class="toolbar">
+          <button class="btn gold" id="setupWizardSave">保存して開始</button>
+          <button class="btn" id="setupWizardSkip">あとで設定</button>
+        </div>
+      </div>
+    </div>
+
+</div>
+
+  <script src="theme.js?v=5.6-setup-wizard"></script>
+  <script src="utils.js?v=5.6-setup-wizard"></script>
+  <script src="storage.js?v=5.6-setup-wizard"></script>
+  <script src="audio.js?v=5.6-setup-wizard"></script>
+  <script src="ui.js?v=5.6-setup-wizard"></script>
+  <script src="customer.js?v=5.6-setup-wizard"></script>
+  <script src="battle.js?v=5.6-setup-wizard"></script>
+  <script src="discord.js?v=5.6-setup-wizard"></script>
+  <script src="menu.js?v=5.6-setup-wizard"></script>
+  <script src="order.js?v=5.6-setup-wizard"></script>
+  <script src="app.js?v=5.6-setup-wizard"></script>
 </body>
 </html>

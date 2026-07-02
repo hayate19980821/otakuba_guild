@@ -56,18 +56,104 @@ window.GuildApp = {VERSION:'4.0'};
       box=document.createElement('div');
       box.id='masterMessageBox';
       box.className='panel master-box';
-      box.innerHTML=`<div class="master-grid"><div class="master-face"><img id="masterNoImg" src="${assetUrl(c.masterImage||'master_no.jpeg')}" alt="ギルドマスター" onerror="this.replaceWith(document.createTextNode('🧙'))"></div><div><div class="master-name">ギルドマスター</div><div id="masterMessageText"></div></div></div>`;
+      box.innerHTML=`<div class="master-grid"><div class="master-face"><img id="masterNoImg" src="${assetUrl(c.masterImage||'master_no.jpeg')}" alt="ギルドマスター" onerror="this.replaceWith(document.createTextNode('🧙'))"></div><div><div class="master-name" id="masterNoName">ギルドマスター</div><div id="masterMessageText"></div></div></div>`;
       panel.appendChild(box);
     }
     const img=$('masterNoImg'); if(img) img.src=assetUrl(c.masterImage||'master_no.jpeg');
+    const mn=$('masterNoName'); if(mn) mn.textContent=c.masterName||'ギルドマスター';
     $('masterMessageText').textContent=text||c.masterMessage||'冷やかしか？さっさとメニューを開け';
     box.style.display='block';
   }
   function hideMasterMessage(){ const box=$('masterMessageBox'); if(box) box.style.display='none'; }
+  
+  function wizardVal(id){ const el=$(id); return el ? el.value.trim() : ''; }
+  function fillSetupWizard(){
+    const c=themeCustom();
+    const name=data.settings.storeName||data.settings.shopName||'';
+    if($('setupStoreName')) $('setupStoreName').value=name;
+    if($('setupStoreId')) $('setupStoreId').value=data.settings.storeId||'';
+    if($('setupGasUrl')) $('setupGasUrl').value=data.settings.gasUrl||'';
+    if($('setupDiscordUrl')) $('setupDiscordUrl').value=data.settings.discordWebhookUrl||'';
+    if($('setupStartTitle')) $('setupStartTitle').value=c.startTitle||startTitleDefault();
+    if($('setupStartSubtitle')) $('setupStartSubtitle').value=c.startSubtitle||startSubtitleDefault();
+    if($('setupStartBg')) $('setupStartBg').value=c.startBg||'';
+    if($('setupStartBgm')) $('setupStartBgm').value=c.startBgm||'title';
+    if($('setupMasterName')) $('setupMasterName').value=c.masterName||'ギルドマスター';
+    if($('setupMasterImage')) $('setupMasterImage').value=c.masterImage||'master_no.jpeg';
+    if($('setupMasterMessage')) $('setupMasterMessage').value=c.masterMessage||'冷やかしか？さっさとメニューを開け';
+    if($('setupVictoryBg')) $('setupVictoryBg').value=c.victoryBg||'';
+    if($('setupVictoryImage')) $('setupVictoryImage').value=c.victoryImage||'victory_clear.PNG';
+    if($('setupVictoryTitle')) $('setupVictoryTitle').value=c.victoryTitle||'';
+    if($('setupVictorySubtitle')) $('setupVictorySubtitle').value=c.victorySubtitle||'';
+    if($('setupVictoryBgm')) $('setupVictoryBgm').value=c.victoryBgm||'ending';
+  }
+  function showSetupWizard(){
+    const o=$('setupWizardOverlay'); if(!o) return;
+    fillSetupWizard();
+    o.classList.add('show');
+  }
+  function hideSetupWizard(){ const o=$('setupWizardOverlay'); if(o) o.classList.remove('show'); }
+  async function applySetupPreset(themeId){
+    if(!themeId||!window.GuildTheme||!GuildTheme.loadPresets) return;
+    try{
+      const presets=await GuildTheme.loadPresets();
+      const p=presets.find(x=>x&&x.id===themeId);
+      if(!p) return;
+      GuildTheme.applyPresetTheme(p);
+      if(Array.isArray(p.enemies)){
+        data.monsters=p.enemies.map(function(e,idx){ return {
+          id:GuildUtils.uid('enemy'), name:e.name, stage:e.stage, maxHp:e.maxHp, hp:e.maxHp,
+          bg:e.bg, background:e.bg, image:e.image, bgm:e.bgm, scale:e.scale||100, offsetX:e.offsetX||0, offsetY:e.offsetY||0, sort:idx
+        }; });
+        data.currentEnemyIndex=0;
+      }
+    }catch(e){}
+  }
+
   function renderParty(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); data.partyCount=count; const charge=Number(data.settings.coverCharge??500)||0; $('partyCountView').textContent=`${count}名`; $('chargePreview').textContent=`ギルド登録料（チャージ）：${GuildUtils.yen(charge,data.settings.currency)} × ${count}名 = ${GuildUtils.yen(charge*count,data.settings.currency)}`; }
   function showChargeConfirm(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); const charge=Number(data.settings.coverCharge??500)||0; const total=charge*count; $('chargeConfirmBody').textContent=`ギルドへの登録には登録料（チャージ）が必要です。\n\n冒険者名：${data.currentCustomer||'未登録'}\nパーティ人数：${count}名\n登録料：${GuildUtils.yen(charge,data.settings.currency)} × ${count}名\n\n合計：${GuildUtils.yen(total,data.settings.currency)}\n\n登録しますか？`; GuildUI.openModal('modalChargeConfirm'); }
   function applyCoverCharge(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); const charge=Number(data.settings.coverCharge??500)||0; const total=charge*count; data.activeBill=Array.isArray(data.activeBill)?data.activeBill:[]; data.activeBill=data.activeBill.filter(i=>i.id!=='cover_charge'); if(charge>0&&count>0){ data.activeBill.unshift({id:'cover_charge',name:'ギルド登録料（チャージ）',cat:'charge',price:charge,qty:count,subtotal:total,partyCount:count,isCharge:true}); } GuildStorage.save(); }
-  GuildApp.showWelcomeBack=function(){ welcomeText('おかえりなさい、冒険者。次のクエストを受けますか？'); showWelcomeScreen(); };
+  GuildApp.showWelcomeBack=function(){ welcomeText('おかえりなさい、冒険者。次のクエストを受けますか？'); 
+  if($('setupWizardSave')) $('setupWizardSave').onclick=async()=>{
+    const storeName=wizardVal('setupStoreName');
+    const gasUrl=wizardVal('setupGasUrl');
+    if(!storeName){ GuildUI.toast('店舗名を入力してください'); return; }
+    if(!gasUrl){ GuildUI.toast('GAS URLを入力してください'); return; }
+    await applySetupPreset(wizardVal('setupTheme'));
+    const themeCustom={
+      startTitle:wizardVal('setupStartTitle'),
+      startSubtitle:wizardVal('setupStartSubtitle'),
+      startBg:wizardVal('setupStartBg'),
+      startBgm:wizardVal('setupStartBgm')||'title',
+      masterName:wizardVal('setupMasterName')||'ギルドマスター',
+      masterImage:wizardVal('setupMasterImage')||'master_no.jpeg',
+      masterMessage:wizardVal('setupMasterMessage')||'冷やかしか？さっさとメニューを開け',
+      victoryBg:wizardVal('setupVictoryBg'),
+      victoryImage:wizardVal('setupVictoryImage')||'victory_clear.PNG',
+      victoryTitle:wizardVal('setupVictoryTitle'),
+      victorySubtitle:($('setupVictorySubtitle')?$('setupVictorySubtitle').value:''),
+      victoryBgm:wizardVal('setupVictoryBgm')||'ending'
+    };
+    GuildStorage.completeInitialSetup({
+      storeName,
+      storeId:wizardVal('setupStoreId'),
+      gasUrl,
+      discordWebhookUrl:wizardVal('setupDiscordUrl'),
+      themeCustom
+    });
+    hideSetupWizard();
+    applyStartTheme();
+    GuildUI.toast('初回セットアップを保存しました');
+  };
+  if($('setupWizardSkip')) $('setupWizardSkip').onclick=()=>{
+    data.settings.setupDone=true;
+    GuildStorage.save();
+    hideSetupWizard();
+    GuildUI.toast('あとで管理画面から設定できます');
+  };
+
+  showWelcomeScreen();
+  if(GuildStorage.needsInitialSetup&&GuildStorage.needsInitialSetup()) showSetupWizard(); };
   GuildApp.showLevelUp=function(oldLevel,newLevel){ const o=$('levelUpOverlay'); $('levelUpText').textContent=`Lv.${oldLevel} → Lv.${newLevel}`; o.classList.add('show'); };
   GuildApp.showVictoryClear=function(){ const o=$('guildReturnOverlay'); if(o) o.classList.add('show'); };
   if($('guildReturnBtn')) $('guildReturnBtn').onclick=(ev)=>{
