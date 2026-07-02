@@ -3,7 +3,7 @@
   if(window.GuildTheme) await GuildTheme.init();
   const data = await GuildStorage.init();
   const SESSION='otakuba.v3.final.admin.session';
-  const tabs=[['dash','📊 概要'],['business','🟢 営業'],['menu','🍴 メニュー'],['inventory','📦 在庫'],['monsters','⚔️ 討伐'],['settings','⚙️ 設定'],['concept','🎭 コンセプト'],['qr','🔳 QR'],['customers','👤 顧客'],['sales','💰 売上管理'],['upload','🖼️ 画像/音源'],['sync','☁️ 同期'],['reset','🧹 reset']];
+  const tabs=[['dash','📊 概要'],['business','🟢 営業'],['menu','🍴 メニュー'],['inventory','📦 在庫'],['monsters','⚔️ 討伐'],['settings','⚙️ 設定'],['concept','🎭 コンセプト'],['qr','🔳 QR'],['storeInfo','🏪 店舗情報'],['customers','👤 顧客'],['sales','💰 売上管理'],['upload','🖼️ 画像/音源'],['sync','☁️ 同期'],['reset','🧹 reset']];
   let current='dash', customerQuery='', salesQuery='';
   function loginOk(){return sessionStorage.getItem(SESSION)==='ok'} function showLogin(){$('adminLogin').classList.remove('hidden');$('adminApp').classList.add('hidden')} function showApp(){$('adminLogin').classList.add('hidden');$('adminApp').classList.remove('hidden');renderTabs();render();startAutoRefresh()}
   let autoTimer=null;
@@ -237,59 +237,6 @@
     '</div><div class="toolbar"><button class="btn green" id="saveSettings">保存</button><button class="btn" id="jsonSettings">詳細JSON</button></div>';
     $('saveSettings').onclick=function(){s.currency=$('setCurrency').value||'G';s.coverCharge=+$('setCover').value||0;s.adminPassword=$('setPass').value||'OTAKU';s.notifyOn=$('setNotify').checked;s.gasUrl=$('setGas').value.trim();s.discordWebhookUrl=$('setHook').value.trim();s.notice={enabled:$('noticeEnabled').checked,title:$('noticeTitle').value||'本日のお知らせ',body:$('noticeBody').value||'',position:$('noticePosition').value||'top'};save();toast('保存しました');if(GuildStorage.pushCloud)GuildStorage.pushCloud();};
     $('jsonSettings').onclick=function(){textareaEditor('settings','settings.json');};if($('resetSetupWizard'))$('resetSetupWizard').onclick=function(){s.setupDone=false;save();if(GuildStorage.pushCloud)GuildStorage.pushCloud();toast('次回、初回セットアップを表示します');};}
-
-  function conceptTemplateFromPreset(p){
-    p=p||{};
-    const id=p.id||'';
-    const t=p.theme||{};
-    const assets=(t.assets||p.assets||{});
-    const messages=t.messages||{};
-    const enemies=Array.isArray(p.enemies)?p.enemies:[];
-    const first=enemies[0]||{};
-    const last=enemies.length?enemies[enemies.length-1]:{};
-    const folder=id?('presets/'+id+'/'):'';
-
-    function val(){
-      for(var i=0;i<arguments.length;i++){
-        var v=arguments[i];
-        if(v!==undefined && v!==null && String(v).trim()!=='') return v;
-      }
-      return '';
-    }
-    function asset(name, fallback){
-      var v=val(assets[name], fallback);
-      if(!v) return '';
-      // URLや既存ファイル名はそのまま。プリセット用の相対名だけ presets/<id>/ を付ける。
-      if(/^https?:/i.test(v) || v.indexOf('/')>=0 || !folder) return v;
-      return folder+v;
-    }
-
-    return {
-      startTitle: val(messages.titleWelcome, (t.brand&&t.brand.shopName? t.brand.shopName+'へ<br>ようこそ' : '')),
-      startSubtitle: val(messages.openMenu, 'メニューを開きますか？'),
-      startBg: asset('startBg', asset('welcomeBg', first.bg||'')),
-      startBgm: val(assets.startBgm, assets.titleBgm, 'title'),
-
-      victoryBg: asset('victoryBg', asset('clearBg', last.bg||'')),
-      victoryImage: asset('victoryImage', asset('clearImage', 'victory_clear.PNG')),
-      victoryTitle: val(messages.victoryTitle, messages.clearTitle, ''),
-      victorySubtitle: val(messages.victorySubtitle, messages.peace, ''),
-      victoryBgm: val(assets.victoryBgm, assets.clearBgm, 'ending'),
-
-      masterName: val((t.brand&&t.brand.masterName), 'ギルドマスター'),
-      masterImage: asset('masterImage', (t.brand&&t.brand.masterImage)||'master_no.jpeg'),
-      masterMessage: val(messages.masterDefault, '冷やかしか？さっさとメニューを開け')
-    };
-  }
-
-  function applyConceptTemplateToSettings(p){
-    data.settings.themeCustom=Object.assign({}, data.settings.themeCustom||{}, conceptTemplateFromPreset(p));
-    if(p && p.theme && p.theme.brand && p.theme.brand.shopName){
-      data.settings.shopName=p.theme.brand.shopName;
-      data.settings.storeName=p.theme.brand.shopName;
-    }
-  }
-
   function renderConcept(){
     const s=data.settings;
     s.themeCustom=Object.assign({
@@ -376,7 +323,6 @@
           var p=presets[+btn.dataset.applyPreset];
           if(!confirm('「'+(p.label||p.id)+'」に切り替えますか？\n\n・店名/色/呼び名が変わります\n・敵の構成が'+((p.enemies||[]).length)+'体に入れ替わります（今の敵設定は上書き）\n・メニュー/顧客/売上は残ります'))return;
           GuildTheme.applyPresetTheme(p);
-          applyConceptTemplateToSettings(p);
           if(Array.isArray(p.enemies)){
             data.monsters=p.enemies.map(function(e,idx){ return normalizeMonster({ id:GuildUtils.uid('enemy'), name:e.name, stage:e.stage, maxHp:e.maxHp, hp:e.maxHp, bg:e.bg, image:e.image, bgm:e.bgm, scale:e.scale||100, offsetX:e.offsetX||0, offsetY:e.offsetY||0 }, idx); });
             data.currentEnemyIndex=0;
@@ -389,6 +335,44 @@
     });
     $('clearPreset').onclick=function(){ if(!confirm('コンセプトを解除して既定に戻しますか？'))return; GuildTheme.clearOverride(); toast('解除しました。再読み込みで既定に戻ります'); };
   }
+
+  function renderStoreInfoAdmin(){
+    const s=data.settings;
+    s.storeInfo=Object.assign({name:'',address:'',hours:'',phone:'',instagram:'',x:'',website:'',mapUrl:'',description:''},s.storeInfo||{});
+    const i=s.storeInfo;
+    $('adminContent').innerHTML='<h2>🏪 店舗情報</h2>'+
+      '<div class="admin-card"><p class="tiny">一般画面の「店舗情報」ボタンに表示されます。営業時間・SNS・地図など、お客様に見せたい情報を登録できます。</p></div>'+
+      '<div class="admin-card">'+
+      '<label>店舗名<input id="infoName" value="'+esc(i.name||s.storeName||s.shopName||'')+'" placeholder="例：おたく場ギルド"></label>'+
+      '<label>紹介文<textarea id="infoDesc" placeholder="例：ゲームを遊びながら注文できるバーです">'+esc(i.description||'')+'</textarea></label>'+
+      '<label>営業時間<textarea id="infoHours" placeholder="例：20:00〜LAST / 定休日：月曜">'+esc(i.hours||'')+'</textarea></label>'+
+      '<label>住所<textarea id="infoAddress" placeholder="例：青森県むつ市...">'+esc(i.address||'')+'</textarea></label>'+
+      '<label>電話番号<input id="infoPhone" value="'+esc(i.phone||'')+'" placeholder="例：0175-..."></label>'+
+      '<label>Instagram URL<input id="infoInstagram" value="'+esc(i.instagram||'')+'" placeholder="https://instagram.com/..."></label>'+
+      '<label>X URL<input id="infoX" value="'+esc(i.x||'')+'" placeholder="https://x.com/..."></label>'+
+      '<label>公式サイトURL<input id="infoWebsite" value="'+esc(i.website||'')+'" placeholder="https://..."></label>'+
+      '<label>Google Map URL<input id="infoMap" value="'+esc(i.mapUrl||'')+'" placeholder="https://maps.app.goo.gl/..."></label>'+
+      '<div class="toolbar"><button class="btn gold" id="saveStoreInfo">店舗情報を保存</button></div>'+
+      '</div>';
+    $('saveStoreInfo').onclick=function(){
+      s.storeInfo={
+        name:$('infoName').value.trim(),
+        description:$('infoDesc').value,
+        hours:$('infoHours').value,
+        address:$('infoAddress').value,
+        phone:$('infoPhone').value.trim(),
+        instagram:$('infoInstagram').value.trim(),
+        x:$('infoX').value.trim(),
+        website:$('infoWebsite').value.trim(),
+        mapUrl:$('infoMap').value.trim()
+      };
+      if(s.storeInfo.name){ s.storeName=s.storeInfo.name; s.shopName=s.storeInfo.name; }
+      save();
+      if(GuildStorage.pushCloud)GuildStorage.pushCloud();
+      toast('店舗情報を保存しました');
+    };
+  }
+
   function renderQR(){
     const s=data.settings||{};
     const base=(location.origin+location.pathname.replace(/\/admin\.html$/,'/'));
@@ -643,6 +627,6 @@
     $('resetDailyReports').onclick=resetDailyReports;
     $('resetAllLocal').onclick=resetAllLocal;
   }
-  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v5.5 Game体験型メニュー</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='concept')renderConcept(); if(current==='qr')renderQR(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
+  function render(){if(current==='dash'){const ss=salesSettings();const monthList=activeSales().filter(x=>saleMonth(x)===ss.currentMonth);const total=sumSales(monthList);const cover=chargeTotal(monthList);const e=data.monsters[data.currentEnemyIndex]||{};$('adminContent').innerHTML=`<h2>概要</h2><div class="grid"><div class="admin-card"><div class="admin-card-title">現在の敵</div>${esc(e.name||'-')}<br>HP ${e.hp||0}/${e.maxHp||0}</div><div class="admin-card"><div class="admin-card-title">顧客数</div>${data.customers.length}</div><div class="admin-card"><div class="admin-card-title">今月売上</div>${yen(total,data.settings.currency)}<br><span class="tiny">${esc(ss.currentMonth)} / 席料 ${yen(cover,data.settings.currency)}</span></div><div class="admin-card"><div class="admin-card-title">状態</div>v1.0 Game体験型メニュー</div></div>`} if(current==='business')renderBusiness(); if(current==='menu')renderMenu(); if(current==='inventory')renderInventory(); if(current==='monsters')renderMonsters(); if(current==='settings')renderSettings(); if(current==='storeInfo')renderStoreInfoAdmin(); if(current==='concept')renderConcept(); if(current==='qr')renderQR(); if(current==='customers')renderCustomers(); if(current==='sales')renderSales(); if(current==='upload')renderUpload(); if(current==='sync')renderSync(); if(current==='reset')renderReset();}
   loginOk()?showApp():showLogin();
 })();

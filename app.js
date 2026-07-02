@@ -16,10 +16,29 @@ window.GuildApp = {VERSION:'4.0'};
     welcomeText(c.startSubtitle || startSubtitleDefault());
     if(c.startBg && window.GuildUI && GuildUI.applyBg) GuildUI.applyBg(assetUrl(c.startBg));
   }
+  function hasActiveSession(){
+    const bill=Array.isArray(data.activeBill)?data.activeBill:[];
+    const c=GuildCustomer.current&&GuildCustomer.current();
+    return bill.length>0 && !!(data.currentCustomerId||data.currentCustomer) && !(c&&c.checkedOut===true);
+  }
+  function welcomePrompt(){
+    if(hasActiveSession()){
+      const c=GuildCustomer.current&&GuildCustomer.current();
+      const nm=(c&&c.name)||data.currentCustomer||'冒険者';
+      return `戦闘を再開しますか？\nお帰りなさい、冒険者${nm}`;
+    }
+    return (themeCustom().startSubtitle || startSubtitleDefault());
+  }
   function showWelcomeScreen(){
     applyStartTheme();
+    welcomeText(welcomePrompt());
     GuildUI.show('screenWelcome');
     GuildAudio.playBgm((themeCustom().startBgm)||'title');
+  }
+  function resumeBattle(){
+    GuildAudio.stopBgm();
+    GuildUI.show('screenMain');
+    GuildBattle.render();
   }
   function applyVictoryTheme(){
     const c=themeCustom();
@@ -66,46 +85,6 @@ window.GuildApp = {VERSION:'4.0'};
   }
   function hideMasterMessage(){ const box=$('masterMessageBox'); if(box) box.style.display='none'; }
   
-
-  function conceptTemplateFromPresetApp(p){
-    p=p||{};
-    const id=p.id||'';
-    const t=p.theme||{};
-    const assets=(t.assets||p.assets||{});
-    const messages=t.messages||{};
-    const enemies=Array.isArray(p.enemies)?p.enemies:[];
-    const first=enemies[0]||{};
-    const last=enemies.length?enemies[enemies.length-1]:{};
-    const folder=id?('presets/'+id+'/'):'';
-    function val(){
-      for(let i=0;i<arguments.length;i++){
-        const v=arguments[i];
-        if(v!==undefined && v!==null && String(v).trim()!=='') return v;
-      }
-      return '';
-    }
-    function asset(name, fallback){
-      let v=val(assets[name], fallback);
-      if(!v) return '';
-      if(/^https?:/i.test(v) || String(v).includes('/') || !folder) return v;
-      return folder+v;
-    }
-    return {
-      startTitle: val(messages.titleWelcome, (t.brand&&t.brand.shopName? t.brand.shopName+'へ<br>ようこそ' : '')),
-      startSubtitle: val(messages.openMenu, 'メニューを開きますか？'),
-      startBg: asset('startBg', asset('welcomeBg', first.bg||'')),
-      startBgm: val(assets.startBgm, assets.titleBgm, 'title'),
-      victoryBg: asset('victoryBg', asset('clearBg', last.bg||'')),
-      victoryImage: asset('victoryImage', asset('clearImage', 'victory_clear.PNG')),
-      victoryTitle: val(messages.victoryTitle, messages.clearTitle, ''),
-      victorySubtitle: val(messages.victorySubtitle, messages.peace, ''),
-      victoryBgm: val(assets.victoryBgm, assets.clearBgm, 'ending'),
-      masterName: val((t.brand&&t.brand.masterName), 'ギルドマスター'),
-      masterImage: asset('masterImage', (t.brand&&t.brand.masterImage)||'master_no.jpeg'),
-      masterMessage: val(messages.masterDefault, '冷やかしか？さっさとメニューを開け')
-    };
-  }
-
   function wizardVal(id){ const el=$(id); return el ? el.value.trim() : ''; }
   function fillSetupWizard(){
     const c=themeCustom();
@@ -150,6 +129,28 @@ window.GuildApp = {VERSION:'4.0'};
     }catch(e){}
   }
 
+  
+  function linkLine(label,url,text){
+    if(!url) return '';
+    const safe=GuildUtils.esc(url);
+    return `<div><b>${label}</b>：<a href="${safe}" target="_blank" rel="noopener">${GuildUtils.esc(text||url)}</a></div>`;
+  }
+  function renderStoreInfo(){
+    const s=(data.settings&&data.settings.storeInfo)||{};
+    const name=s.name||data.settings.storeName||data.settings.shopName||'店舗情報';
+    const lines=[];
+    lines.push(`<div class="store-info-name">${GuildUtils.esc(name)}</div>`);
+    if(s.description) lines.push(`<div class="store-info-desc">${GuildUtils.esc(s.description).replace(/\n/g,'<br>')}</div>`);
+    if(s.hours) lines.push(`<div><b>営業時間</b>：${GuildUtils.esc(s.hours).replace(/\n/g,'<br>')}</div>`);
+    if(s.address) lines.push(`<div><b>住所</b>：${GuildUtils.esc(s.address).replace(/\n/g,'<br>')}</div>`);
+    if(s.phone) lines.push(`<div><b>電話</b>：${GuildUtils.esc(s.phone)}</div>`);
+    lines.push(linkLine('Instagram',s.instagram,'Instagram'));
+    lines.push(linkLine('X',s.x,'X'));
+    lines.push(linkLine('Web',s.website,'公式サイト'));
+    lines.push(linkLine('MAP',s.mapUrl,'Google Map'));
+    const body=$('storeInfoBody'); if(body) body.innerHTML=lines.filter(Boolean).join('');
+  }
+
   function renderParty(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); data.partyCount=count; const charge=Number(data.settings.coverCharge??500)||0; $('partyCountView').textContent=`${count}名`; $('chargePreview').textContent=`ギルド登録料（チャージ）：${GuildUtils.yen(charge,data.settings.currency)} × ${count}名 = ${GuildUtils.yen(charge*count,data.settings.currency)}`; }
   function showChargeConfirm(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); const charge=Number(data.settings.coverCharge??500)||0; const total=charge*count; $('chargeConfirmBody').textContent=`ギルドへの登録には登録料（チャージ）が必要です。\n\n冒険者名：${data.currentCustomer||'未登録'}\nパーティ人数：${count}名\n登録料：${GuildUtils.yen(charge,data.settings.currency)} × ${count}名\n\n合計：${GuildUtils.yen(total,data.settings.currency)}\n\n登録しますか？`; GuildUI.openModal('modalChargeConfirm'); }
   function applyCoverCharge(){ const count=Math.max(1,Math.min(20,Number(data.partyCount||1)||1)); const charge=Number(data.settings.coverCharge??500)||0; const total=charge*count; data.activeBill=Array.isArray(data.activeBill)?data.activeBill:[]; data.activeBill=data.activeBill.filter(i=>i.id!=='cover_charge'); if(charge>0&&count>0){ data.activeBill.unshift({id:'cover_charge',name:'ギルド登録料（チャージ）',cat:'charge',price:charge,qty:count,subtotal:total,partyCount:count,isCharge:true}); } GuildStorage.save(); }
@@ -160,20 +161,19 @@ window.GuildApp = {VERSION:'4.0'};
     if(!storeName){ GuildUI.toast('店舗名を入力してください'); return; }
     if(!gasUrl){ GuildUI.toast('GAS URLを入力してください'); return; }
     await applySetupPreset(wizardVal('setupTheme'));
-    const presetTc=data.settings.themeCustom||{};
     const themeCustom={
-      startTitle:wizardVal('setupStartTitle')||presetTc.startTitle||'',
-      startSubtitle:wizardVal('setupStartSubtitle')||presetTc.startSubtitle||'',
-      startBg:wizardVal('setupStartBg')||presetTc.startBg||'',
-      startBgm:wizardVal('setupStartBgm')||presetTc.startBgm||'title',
-      masterName:wizardVal('setupMasterName')||presetTc.masterName||'ギルドマスター',
-      masterImage:wizardVal('setupMasterImage')||presetTc.masterImage||'master_no.jpeg',
-      masterMessage:wizardVal('setupMasterMessage')||presetTc.masterMessage||'冷やかしか？さっさとメニューを開け',
-      victoryBg:wizardVal('setupVictoryBg')||presetTc.victoryBg||'',
-      victoryImage:wizardVal('setupVictoryImage')||presetTc.victoryImage||'victory_clear.PNG',
-      victoryTitle:wizardVal('setupVictoryTitle')||presetTc.victoryTitle||'',
-      victorySubtitle:($('setupVictorySubtitle')?$('setupVictorySubtitle').value:'')||presetTc.victorySubtitle||'',
-      victoryBgm:wizardVal('setupVictoryBgm')||presetTc.victoryBgm||'ending'
+      startTitle:wizardVal('setupStartTitle'),
+      startSubtitle:wizardVal('setupStartSubtitle'),
+      startBg:wizardVal('setupStartBg'),
+      startBgm:wizardVal('setupStartBgm')||'title',
+      masterName:wizardVal('setupMasterName')||'ギルドマスター',
+      masterImage:wizardVal('setupMasterImage')||'master_no.jpeg',
+      masterMessage:wizardVal('setupMasterMessage')||'冷やかしか？さっさとメニューを開け',
+      victoryBg:wizardVal('setupVictoryBg'),
+      victoryImage:wizardVal('setupVictoryImage')||'victory_clear.PNG',
+      victoryTitle:wizardVal('setupVictoryTitle'),
+      victorySubtitle:($('setupVictorySubtitle')?$('setupVictorySubtitle').value:''),
+      victoryBgm:wizardVal('setupVictoryBgm')||'ending'
     };
     GuildStorage.completeInitialSetup({
       storeName,
@@ -214,9 +214,11 @@ window.GuildApp = {VERSION:'4.0'};
     GuildBattle.render();
   };
   $('levelUpClose').onclick=()=>$('levelUpOverlay').classList.remove('show');
-  $('btnStartYes').onclick=()=>{ GuildAudio.playSe('ok'); GuildAudio.stopBgm(); hideMasterMessage(); GuildUI.show('screenName'); };
+  $('btnStartYes').onclick=()=>{ GuildAudio.playSe('ok'); hideMasterMessage(); if(hasActiveSession()){ resumeBattle(); return; } GuildAudio.stopBgm(); GuildUI.show('screenName'); };
   $('btnStartNo').onclick=()=>{ GuildAudio.playSe('cancel'); showMasterMessage(); };
   $('btnAdmin').onclick=()=>location.href='admin.html';
+  if($('btnStoreInfo')) $('btnStoreInfo').onclick=()=>{ GuildAudio.playSe('ok'); renderStoreInfo(); $('storeInfoOverlay').classList.add('show'); };
+  if($('storeInfoClose')) $('storeInfoClose').onclick=()=>{ GuildAudio.playSe('cancel'); $('storeInfoOverlay').classList.remove('show'); };
   $('btnBackWelcome').onclick=()=>{ GuildAudio.playSe('cancel'); showWelcomeScreen(); };
   $('btnNameOk').onclick=()=>{ const n=$('nameInput').value.trim(); if(!n){GuildAudio.playSe('cancel'); GuildUI.toast('名前を入力してください'); return;} GuildAudio.playSe('ok'); GuildCustomer.setName(n); renderParty(); GuildUI.show('screenParty'); };
   function renderExistingList(q){ const list=GuildCustomer.list().filter(c=>!q||String(c.name||'').toLowerCase().includes(q.toLowerCase())); $('existingList').innerHTML = list.length ? list.map(c=>`<button class="btn existing-pick" data-cid="${c.id}" style="display:block;width:100%;text-align:left;margin:4px 0">${GuildUtils.esc(c.name)} <span style="opacity:.6;font-size:.85em">Lv.${c.level||1}・来店${c.visits||0}回</span></button>`).join('') : '<p style="opacity:.6;text-align:center">該当なし</p>'; document.querySelectorAll('.existing-pick').forEach(b=>b.onclick=()=>{ const c=GuildCustomer.selectExisting(b.dataset.cid); if(c){ GuildAudio.playSe('ok'); $('existingOverlay').classList.remove('show'); $('nameInput').value=c.name; const lu=c._levelUp; if(lu&&lu.leveled){ GuildAudio.playSe('levelup'); if(window.GuildApp&&GuildApp.showLevelUp) GuildApp.showLevelUp(lu.oldLevel,lu.newLevel); } renderParty(); GuildUI.show('screenParty'); } }); }

@@ -5,10 +5,10 @@
   <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,user-scalable=no">
   <meta name="theme-color" content="#050505">
   <title data-theme-title>おたく場ギルド</title>
-  <link rel="stylesheet" href="main.css?v=5.6-setup-wizard">
-  <link rel="stylesheet" href="battle.css?v=5.6-setup-wizard">
-  <link rel="stylesheet" href="menu.css?v=5.6-setup-wizard">
-  <link rel="stylesheet" href="effects.css?v=5.6-setup-wizard">
+  <link rel="stylesheet" href="main.css?v=1.0-sales">
+  <link rel="stylesheet" href="battle.css?v=1.0-sales">
+  <link rel="stylesheet" href="menu.css?v=1.0-sales">
+  <link rel="stylesheet" href="effects.css?v=1.0-sales">
 
   <style>
     .setup-wizard-overlay{z-index:10050}
@@ -34,6 +34,7 @@
           <button class="btn gold" id="btnStartYes">はい</button>
           <button class="btn" id="btnStartNo">いいえ</button>
         </div>
+        <button class="btn mt" id="btnStoreInfo">🏪 店舗情報</button>
         <button class="btn admin-link mt" id="btnAdmin">🔐 管理者用</button>
       </div>
     </section>
@@ -246,18 +247,27 @@
       </div>
     </div>
 
+
+    <div id="storeInfoOverlay" class="level-up-overlay">
+      <div class="panel window store-info-card">
+        <div class="title-logo small">店舗情報</div>
+        <div id="storeInfoBody" class="store-info-body"></div>
+        <button class="btn mt" id="storeInfoClose">閉じる</button>
+      </div>
+    </div>
+
 </div>
 
-  <script src="theme.js?v=5.6-setup-wizard"></script>
-  <script src="utils.js?v=5.6-setup-wizard"></script>
-  <script src="storage.js?v=5.6-setup-wizard"></script>
-  <script src="audio.js?v=5.6-setup-wizard"></script>
-  <script src="ui.js?v=5.6-setup-wizard"></script>
-  <script src="customer.js?v=5.6-setup-wizard"></script>
-  <script src="battle.js?v=5.6-setup-wizard"></script>
-  <script src="discord.js?v=5.6-setup-wizard"></script>
-  <script src="menu.js?v=5.6-setup-wizard"></script>
-  <script src="order.js?v=5.6-setup-wizard"></script>
-  <script src="app.js?v=5.6-setup-wizard"></script>
+  <script src="theme.js?v=1.0-sales"></script>
+  <script src="utils.js?v=1.0-sales"></script>
+  <script src="storage.js?v=1.0-sales"></script>
+  <script src="audio.js?v=1.0-sales"></script>
+  <script src="ui.js?v=1.0-sales"></script>
+  <script src="customer.js?v=1.0-sales"></script>
+  <script src="battle.js?v=1.0-sales"></script>
+  <script src="discord.js?v=1.0-sales"></script>
+  <script src="menu.js?v=1.0-sales"></script>
+  <script src="order.js?v=1.0-sales"></script>
+  <script src="app.js?v=1.0-sales"></script>
 </body>
 </html>

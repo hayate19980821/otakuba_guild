@@ -76,3 +76,6 @@ html,body{overflow:auto;min-height:100%;height:auto}
 #qrUrlText{
   font-size:12px;
 }
+
+
+#infoDesc,#infoHours,#infoAddress{min-height:70px}

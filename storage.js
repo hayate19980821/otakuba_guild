@@ -98,6 +98,62 @@ window.GuildStorage = (() => {
     return s.length ? s : f;
   }
 
+
+  function queryParams_(){
+    try{ return new URLSearchParams(location.search||''); }catch(e){ return new URLSearchParams(''); }
+  }
+  async function resolveStoreRoute_(){
+    const q=queryParams_();
+    const storeId=(q.get('store')||q.get('s')||'').trim();
+    const gas=(q.get('gas')||q.get('gasUrl')||'').trim();
+    if(!storeId && !gas) return null;
+    const cfg={};
+    if(storeId) cfg.storeId=storeId;
+    if(gas) cfg.gasUrl=gas;
+    if(storeId){
+      try{
+        const stores=await fetchJson('stores.json', {});
+        let rec=null;
+        if(Array.isArray(stores.stores)) rec=stores.stores.find(x=>x&&x.id===storeId);
+        else if(stores.stores && stores.stores[storeId]) rec=stores.stores[storeId];
+        else if(stores[storeId]) rec=stores[storeId];
+        if(rec){ Object.assign(cfg, rec); cfg.storeId=storeId; }
+      }catch(e){}
+    }
+    return cfg;
+  }
+  function applyStoreRoute_(cfg, defaults){
+    if(!cfg) return false;
+    data.settings=data.settings||{};
+    const oldGas=data.settings.gasUrl||'';
+    const oldStore=data.settings.storeId||'';
+    const incomingGas=cfg.gasUrl||oldGas;
+    const incomingStore=cfg.storeId||oldStore;
+    const switching=(incomingGas&&oldGas&&incomingGas!==oldGas)||(incomingStore&&oldStore&&incomingStore!==oldStore);
+    if(switching){
+      data=Object.assign({}, defaults, {
+        settings:Object.assign({}, defaults.settings, {
+          gasUrl:incomingGas||'',
+          discordWebhookUrl:cfg.discordWebhookUrl||'',
+          storeId:incomingStore||'',
+          storeName:cfg.storeName||cfg.shopName||'',
+          shopName:cfg.shopName||cfg.storeName||''
+        }),
+        currentCustomer:'',
+        activeBill:[],
+        currentEnemyIndex:0,
+        partyCount:1
+      });
+    }
+    if(cfg.gasUrl) data.settings.gasUrl=cfg.gasUrl;
+    if(cfg.discordWebhookUrl) data.settings.discordWebhookUrl=cfg.discordWebhookUrl;
+    if(cfg.storeId) data.settings.storeId=cfg.storeId;
+    if(cfg.storeName) data.settings.storeName=cfg.storeName;
+    if(cfg.shopName) data.settings.shopName=cfg.shopName;
+    if(cfg.themeCustom) data.settings.themeCustom=Object.assign({}, data.settings.themeCustom||{}, cfg.themeCustom);
+    return true;
+  }
+
   async function init(){
     const defaults = {
       settings: await fetchJson(files.settings, {}),
@@ -123,18 +179,23 @@ window.GuildStorage = (() => {
       bgmVolume:0.45,seVolume:0.9,
       notice:{enabled:true,title:'本日のお知らせ',body:'',position:'top'},
       themeCustom:{startTitle:'',startSubtitle:'',startBg:'',startBgm:'title',victoryBg:'',victoryImage:'victory_clear.PNG',victoryTitle:'',victorySubtitle:'',victoryBgm:'ending',masterImage:'master_no.jpeg',masterMessage:'冷やかしか？さっさとメニューを開け'},
-      business:{open:false,openedAt:'',closedAt:'',dailyReports:[]}
+      business:{open:false,openedAt:'',closedAt:'',dailyReports:[]},
+      storeInfo:{name:'',address:'',hours:'',phone:'',instagram:'',x:'',website:'',mapUrl:'',description:''}
     }, defaults.settings || {});
     data.settings.notice = Object.assign({enabled:true,title:'本日のお知らせ',body:'',position:'top'}, data.settings.notice || {});
     data.settings.business = Object.assign({open:false,openedAt:'',closedAt:'',dailyReports:[]}, data.settings.business || {});
+    data.settings.storeInfo = Object.assign({name:'',address:'',hours:'',phone:'',instagram:'',x:'',website:'',mapUrl:'',description:''}, data.settings.storeInfo || {});
     data.settings.themeCustom = Object.assign({startTitle:'',startSubtitle:'',startBg:'',startBgm:'title',victoryBg:'',victoryImage:'victory_clear.PNG',victoryTitle:'',victorySubtitle:'',victoryBgm:'ending',masterImage:'master_no.jpeg',masterMessage:'冷やかしか？さっさとメニューを開け'}, data.settings.themeCustom || {});
     if(!Array.isArray(data.settings.business.dailyReports)) data.settings.business.dailyReports=[];
+
+    const routeCfg = await resolveStoreRoute_();
 
     const existing = get(keys.state, null);
     const old = !existing ? get(keys.old, null) : null;
     const legacy = !existing && !old ? migrateLegacy(get(keys.legacy, null)) : null;
     data = Object.assign({}, defaults, existing || old || legacy || {});
     data.settings = Object.assign({}, defaults.settings, data.settings || {});
+    applyStoreRoute_(routeCfg, defaults);
     // menu.json（本番メニュー）が保存済み/GASメニューより完全なら、menu.jsonを正として復旧する
     // これでlocalStorage/GASに残った「フードだけ」の古いメニューに引っ張られない
     const beforeMenu = (Array.isArray(data.menu) && data.menu.length) ? data.menu : [];
