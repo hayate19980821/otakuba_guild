@@ -168,8 +168,8 @@
   ];
   var IMG_LIST=[
     'slime.png','goblin.png','orc.png','skeleton.png','gargoyle.png','minotaur.png','mimic.png','dragon.png','dark_wizard.png','maou.png','maou_new.png',
-    'presets/space/drone.png','presets/space/fighter.png','presets/space/gunship.png','presets/space/alien.png','presets/space/mine.png','presets/space/robot.png','presets/space/satellite.png','presets/space/kaiju.png','presets/space/pirate.png','presets/space/pirate_king.png','presets/space/mech_suit.png','presets/space/ancient_sentinel.png','presets/space/cyborg_assassin.png','presets/space/swarm_mind_unit.png','presets/space/rogue_ai_core.png','presets/space/space_wraith.png',
-    'presets/magic/familiar.png','presets/magic/fairy.png','presets/magic/armor.png','presets/magic/ghost.png','presets/magic/cursed_chest.png','presets/magic/golem.png','presets/magic/servant.png','presets/magic/summoned_dragon.png','presets/magic/fallen_teacher.png','presets/magic/dark_mage.png','presets/magic/master.png'
+    'presets/space/drone.png','presets/space/fighter.png','presets/space/gunship.png','presets/space/alien.png','presets/space/mine.png','presets/space/robot.png','presets/space/satellite.png','presets/space/kaiju.png','presets/space/pirate.png','presets/space/pirate_king.png',
+    'presets/magic/magic_slime.png','presets/magic/fairy.png','presets/magic/Wight.png','presets/magic/armor.png','presets/magic/golem.png','presets/magic/ghost.png','presets/magic/cursed_book.png','presets/magic/vampire.png','presets/magic/dark_mage.png','presets/magic/summoned_dragon.png','presets/magic/master.png'
   ];
   var BGM_LIST=['title','slime','goblin','orc','cave','ruins','maou','daimaou','ending'];
   function normalizeMonster(m,i){m=m||{};var hpMax=Number(m.maxHp||m.hp||500)||500;m.id=m.id||GuildUtils.uid('enemy');m.name=m.name||('敵'+(i+1));m.stage=m.stage||'草原';m.maxHp=hpMax;m.hp=Number.isFinite(Number(m.hp))?Number(m.hp):hpMax;m.bg=m.bg||m.background||'grass.png';m.background=m.bg;m.image=m.image||'slime.png';m.bgm=m.bgm||'slime';m.sort=Number(m.sort||i);return m;}
